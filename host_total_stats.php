@@ -11,45 +11,68 @@
 
 			$query =
 "SELECT
-	HOSTS_TOTAL,
-	HOSTS_BASED_ON_AMD,
-	HOSTS_BASED_ON_CENTAUR,
-	HOSTS_BASED_ON_INTEL,
-	HOSTS_BASED_ON_TRANSMETA,
-	HOSTS_OTHER,
-	HOSTS_WITH_CREDIT_TOTAL,
-	HOSTS_WITH_CREDIT_AMD,
-	HOSTS_WITH_CREDIT_CENTAUR,
-	HOSTS_WITH_CREDIT_INTEL,
-	HOSTS_WITH_CREDIT_TRANSMETA,
-	HOSTS_WITH_CREDIT_OTHER,
-	HOSTS_ACTIVE_LAST_WEEK_TOTAL,
-	HOSTS_ACTIVE_LAST_WEEK_AMD,
-	HOSTS_ACTIVE_LAST_WEEK_CENTAUR,
-	HOSTS_ACTIVE_LAST_WEEK_INTEL,
-	HOSTS_ACTIVE_LAST_WEEK_TRANSMETA,
-	HOSTS_ACTIVE_LAST_WEEK_OTHER,
-	HOSTS_ACTIVE_LAST_DAY_TOTAL,
-	HOSTS_ACTIVE_LAST_DAY_AMD,
-	HOSTS_ACTIVE_LAST_DAY_CENTAUR,
-	HOSTS_ACTIVE_LAST_DAY_INTEL,
-	HOSTS_ACTIVE_LAST_DAY_TRANSMETA,
-	HOSTS_ACTIVE_LAST_DAY_OTHER,
-	CPU_TOTAL,
-	CPU_AMD,
-	CPU_CENTAUR,
-	CPU_INTEL,
-	CPU_TRANSMETA,
-	CPU_OTHER,
-	FLOOR(RAC_TOTAL) AS RAC_TOTAL,
-	FLOOR(RAC_AMD) AS RAC_AMD,
-	FLOOR(RAC_CENTAUR) AS RAC_CENTAUR,
-	FLOOR(RAC_INTEL) AS RAC_INTEL,
-	FLOOR(RAC_TRANSMETA) AS RAC_TRANSMETA,
-	FLOOR(RAC_OTHER) AS RAC_OTHER
-  FROM VW_HOST_TOTAL_STAT";
-
+    VENDOR,
+    COUNT(*) HOSTS_TOTAL,
+    SUM(P_NCPUS) AS CORES_TOTAL,
+    COUNT(CASE WHEN TOTAL_CREDIT > 0 THEN 1 ELSE NULL END) AS HOSTS_WITH_CREDIT,
+    COUNT(CASE WHEN RPC_TIME + 3600*24*7 > UNIX_TIMESTAMP(NOW()) THEN 1 ELSE NULL END) AS HOSTS_ACTIVE_LAST_WEEK,
+    COUNT(CASE WHEN RPC_TIME + 3600*24 > UNIX_TIMESTAMP(NOW()) THEN 1 ELSE NULL END) AS HOSTS_ACTIVE_LAST_DAY,
+    FLOOR(SUM(TOTAL_CREDIT)) AS TOTAL_CREDIT,
+    FLOOR(SUM(EXPAVG_CREDIT)) AS EXPAVG_CREDIT
+  FROM VW_HOST
+ GROUP BY VENDOR";
+			$queryOrder = "";
+			$queryField = "";			
 			$cursor_id = 0;
+
+			if (isset($_GET['sortby']))
+			{
+				$orderField = $_GET['sortby'];
+			}
+			else
+			{
+				$orderField = "Credit";
+			}
+
+			switch ($orderField)
+			{
+				case "Vendor":
+					$queryOrder = " ORDER BY VENDOR";
+				break;
+
+				case "HostsTotal":
+					$queryOrder = " ORDER BY HOSTS_TOTAL DESC";
+				break;
+
+				case "CoresTotal":
+					$queryOrder = " ORDER BY CORES_TOTAL DESC";
+				break;
+
+				case "HostsWithCredit":
+					$queryOrder = " ORDER BY HOSTS_WITH_CREDIT DESC";
+				break;
+
+				case "ActiveLastWeek":
+					$queryOrder = " ORDER BY HOSTS_ACTIVE_LAST_WEEK DESC";
+				break;
+
+				case "ActiveLastDay":
+					$queryOrder = " ORDER BY HOSTS_ACTIVE_LAST_DAY DESC";
+				break;
+
+				case "Credit":
+					$queryOrder = " ORDER BY TOTAL_CREDIT DESC";
+				break;
+
+				case "RAC":
+					$queryOrder = " ORDER BY EXPAVG_CREDIT DESC";
+				break;
+
+				default:
+					$queryOrder = " ORDER BY TOTAL_CREDIT";
+			}
+
+			$query = $query.$queryOrder;
 			$connect_id = mysql_pconnect($host, $user, $password);
 			mysql_set_charset('utf8', $connect_id);
 
@@ -59,55 +82,54 @@
 				$cursor_id = mysql_query($query);
 				if ($result > 0)
 				{
+					$total_hosts = 0;
+					$total_hosts_with_credit = 0;
+					$total_hosts_active_last_week = 0;
+					$total_hosts_active_last_day = 0;
+					$total_hosts_credit = 0;
+					$total_hosts_rac = 0;
+					$total_hosts_cores = 0;
+
 					page_head(tra("Host statistics", "All"));
 
 					echo "<table>";
-					echo "<tr><td>Statistic</td><td>Total</td><td>AMD</td><td>Intel</td><td>Centaur</td><td>Transmeta</td><td>Other / Unidentified</td></tr>";
+					echo "<tr><td><a href=host_total_stats.php?sortby=Vendor>Vendor</a></td>".
+						"<td><a href=host_total_stats.php?sortby=HostsTotal>Hosts</a></td>".
+						"<td><a href=host_total_stats.php?sortby=CoresTotal>Cores / Threads</a></td>".
+						"<td><a href=host_total_stats.php?sortby=HostsWithCredit>Hosts with credit</a></td>".
+						"<td><a href=host_total_stats.php?sortby=ActiveLastWeek>Active last week</a></td>".
+						"<td><a href=host_total_stats.php?sortby=ActiveLastDay>Active last day</a></td>".
+						"<td><a href=host_total_stats.php?sortby=Credit>Total Credit</a></td>".
+						"<td><a href=host_total_stats.php?sortby=RAC>Recent Average Credit</a></td></tr>";
 
 					while ($row = mysql_fetch_array($cursor_id))
 					{
-						echo "<tr><td>Hosts</td><td>".$row['HOSTS_TOTAL'].
-							"</td><td>".$row['HOSTS_BASED_ON_AMD'].
-							"</td><td>".$row['HOSTS_BASED_ON_INTEL'].
-							"</td><td>".$row['HOSTS_BASED_ON_CENTAUR'].
-							"</td><td>".$row['HOSTS_BASED_ON_TRANSMETA'].
-							"</td><td>".$row['HOSTS_OTHER']."</td></tr>";
+						$total_hosts = $total_hosts + $row['HOSTS_TOTAL'];
+						$total_hosts_cores = $total_hosts_cores + $row['CORES_TOTAL'];
+						$total_hosts_with_credit = $total_hosts_with_credit + $row['HOSTS_WITH_CREDIT'];
+						$total_hosts_active_last_week = $total_hosts_active_last_week + $row['HOSTS_ACTIVE_LAST_WEEK'];
+						$total_hosts_active_last_day = $total_hosts_active_last_day + $row['HOSTS_ACTIVE_LAST_DAY'];
+						$total_hosts_credit = $total_hosts_credit + $row['TOTAL_CREDIT'];
+						$total_hosts_rac = $total_hosts_rac + $row['EXPAVG_CREDIT'];
 
-						echo "<tr><td>Hosts with credit</td><td>".$row['HOSTS_WITH_CREDIT_TOTAL'].
-							"</td><td>".$row['HOSTS_WITH_CREDIT_AMD'].
-							"</td><td>".$row['HOSTS_WITH_CREDIT_INTEL'].
-							"</td><td>".$row['HOSTS_WITH_CREDIT_CENTAUR'].
-							"</td><td>".$row['HOSTS_WITH_CREDIT_TRANSMETA'].
-							"</td><td>".$row['HOSTS_WITH_CREDIT_OTHER']."</td></tr>";
-
-						echo "<tr><td>Active last week</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK_TOTAL'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK_AMD'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK_INTEL'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK_CENTAUR'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK_TRANSMETA'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK_OTHER']."</td></tr>";
-
-						echo "<tr><td>Active last day</td><td>".$row['HOSTS_ACTIVE_LAST_DAY_TOTAL'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY_AMD'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY_INTEL'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY_CENTAUR'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY_TRANSMETA'].
-							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY_OTHER']."</td></tr>";
-
-						echo "<tr><td>Cores / Threads</td><td>".$row['CPU_TOTAL'].
-							"</td><td>".$row['CPU_AMD'].
-							"</td><td>".$row['CPU_INTEL'].
-							"</td><td>".$row['CPU_CENTAUR'].
-							"</td><td>".$row['CPU_TRANSMETA'].
-							"</td><td>".$row['CPU_OTHER']."</td></tr>";
-
-						echo "<tr><td>Recent average credit</td><td>".$row['RAC_TOTAL'].
-							"</td><td>".$row['RAC_AMD'].
-							"</td><td>".$row['RAC_INTEL'].
-							"</td><td>".$row['RAC_CENTAUR'].
-							"</td><td>".$row['RAC_TRANSMETA'].
-							"</td><td>".$row['RAC_OTHER']."</td></tr>";
+						echo "<tr><td>".$row['VENDOR'].
+							"</td><td>".$row['HOSTS_TOTAL'].
+							"</td><td>".$row['CORES_TOTAL'].
+							"</td><td>".$row['HOSTS_WITH_CREDIT'].
+							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK'].
+							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY'].
+							"</td><td>".$row['TOTAL_CREDIT'].
+							"</td><td>".$row['EXPAVG_CREDIT']."</td></tr>";
 					}
+
+					echo "<tr><td>TOTAL:".
+						"</td><td>".$total_hosts.
+						"</td><td>".$total_hosts_cores.
+						"</td><td>".$total_hosts_with_credit.
+						"</td><td>".$total_hosts_active_last_week.
+						"</td><td>".$total_hosts_active_last_day.
+						"</td><td>".$total_hosts_credit.
+						"</td><td>".$total_hosts_rac."</td></tr>";
 
 					echo "</table>";
 
