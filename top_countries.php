@@ -1,15 +1,173 @@
-		<?php
+<?php
+	require_once('../inc/util.inc');
+	require_once('../inc/boinc_db.inc');
 
-			require_once('../inc/util.inc');
-			require_once('../inc/boinc_db.inc');
+	/*
+	Drawing a diagramm. Parameters:
+		$keys - array of categories,
+		$values - array of values of categories,
+		$topValues - number of of showed categories (any other put into Other category),
+		$fileName - name of PNG-file to store diagramm,
+		$caption - caption of diagramm,
+		$width - diagramm width,
+		$height - diagramm height
+	*/
+	function CreateDiagramm($keys, $values, $topValues, $fileName, $caption, $width, $height)
+	{
+		/* Create the image and set colors palette */
+		$image = ImageCreateTrueColor($width, $height);
 
-			$config = get_config();
-			$host = parse_config($config, "<db_host>");
-			$database = parse_config($config, "<db_name>");;
-			$user = parse_config($config, "<db_user>");
-			$password = parse_config($config, "<db_passwd>");
+		$bgcolor = ImageColorAllocate($image, 26, 26, 26);
+		$black = ImageColorAllocate($image, 0, 0, 0);
+		$white = ImageColorAllocate($image, 255, 255, 255);
+		$fontColor = $white;
 
-			$query =
+		/* Define the base color palette */
+		$colors[0] = ImageColorAllocate($image, 0, 0, 255);
+		$colors[1] = ImageColorAllocate($image, 255, 180, 0);
+		$colors[2] = ImageColorAllocate($image, 0, 230, 0);
+		$colors[3] = ImageColorAllocate($image, 255, 0, 255);
+		$colors[4] = ImageColorAllocate($image, 255, 255, 0);
+		$colors[5] = ImageColorAllocate($image, 255, 0, 0);
+		$colors[6] = ImageColorAllocate($image, 0, 255, 255);
+
+		/* Define other colors */
+		$baseColors = count($colors);
+		$i = $baseColors;
+		$minLevel = 80;
+
+		while ($i < $topValues + 1)
+		{
+			$red = ($colors[$i%$baseColors] & 0xFF0000) >> 16;
+			$green = ($colors[$i%$baseColors] & 0x00FF00) >> 8;
+			$blue = $colors[$i%$baseColors] & 0x0000FF;
+
+			$newRed = max(floor($red - ($red / ($topValues + 1 - $i))), $minLevel);
+			$newGreen = max(floor($green - ($green / ($topValues + 1 - $i))), $minLevel);
+			$newBlue = max(floor($blue - ($blue / ($topValues + 1 - $i))), $minLevel);
+
+			$colors[$i] = ImageColorAllocate($image, $newRed, $newGreen, $newBlue);
+			$i++;
+		}
+
+		/* Font settings */
+		$font = 2;
+		$fontWidth = ImageFontWidth($font);
+		$fontHeight = ImageFontHeight($font);
+		$margin = 10;
+
+		/* Creation of list of showed values + line "Other" as sum of other positions */
+		$showedKeys = array(0);
+		$showedValues = array(0);
+
+		for ($i = 0; $i < $topValues; $i++)
+		{
+			$showedKeys[$i] = $keys[$i];
+			$showedValues[$i] = $values[$i];
+		}
+
+		$showedKeys[$topValues] = "Other";
+		$showedValues[$topValues] = array_sum($values) - array_sum($showedValues);
+
+		/* Calculate the max length of key */
+		$maxKeyLength = 0;
+		foreach ($showedKeys as $key)
+		{
+			if ($maxKeyLength < strlen($key))
+			{
+				$maxKeyLength = strlen($key);
+			}
+		}
+
+		/* Fill empty image to make a background */
+		ImageFill($image, 0, 0, $bgcolor);
+
+		/* Draw the diagramm caption */
+		$captionWidth = strlen($caption)*$fontWidth;
+		$captionX = ($width - $captionWidth)/2;
+		$captionY = $fontHeight;
+		ImageString($image, $font, $captionX, $captionY, $caption, $fontColor);
+
+		/* Draw the diagramm legend */
+		$legend_width = ($fontWidth*$maxKeyLength) + $fontHeight + $margin*2.5;
+		$legend_height = $fontHeight*($topValues + 1) + $margin*2;
+		$legend_x = $width - $legend_width - $margin;
+		$legend_y = ($height - $legend_height)/2;
+
+		ImageRectangle($image, $legend_x, $legend_y, $legend_x + $legend_width, $legend_y + $legend_height, $fontColor);
+
+		$text_x = $legend_x + $margin*2.5;
+		$square_x = $legend_x + $margin;
+		$text_base_y = $legend_y + $margin;
+		$i = 0;
+
+		foreach ($showedKeys as $key)
+		{
+			$text_y = $text_base_y + $i*$fontHeight;
+			ImageString($image, $font, $text_x, $text_y, $key, $fontColor);
+			ImageFilledRectangle($image, $square_x + 1, $text_y + 1, $square_x + $fontHeight - 1, $text_y + $fontHeight - 1, $colors[$i]);
+			ImageRectangle($image, $square_x + 1, $text_y + 1, $square_x + $fontHeight - 1, $text_y + $fontHeight - 1, $black);
+			$i++;
+		}
+
+		/* Calculate the angles of showed positions */
+		$total = array_sum($showedValues);
+		$current_total = 0;
+		$angle = Array(0);
+
+		$angle[0] = 0;
+		for ($i = 0; $i < $topValues + 1; $i++)
+		{
+			$current_total += $showedValues[$i];
+			$angle[$i + 1] = floor($current_total/$total*360);			
+		}
+
+		$diameter = min($legend_x - $margin*2, $height - $margin*2 - $captionY - $fontHeight);
+		$center_x = $diameter/2 + $margin;
+		$center_y = $height/2 - $margin;
+		
+		for ($i = 0; $i < $topValues + 1; $i++)
+		{
+			ImageFilledArc($image, $center_x, $center_y, $diameter, $diameter, $angle[$i] - 90, $angle[$i+1] - 90, $colors[$i], IMG_ARC_PIE);
+		}
+
+		ImagePNG($image, $fileName);
+		ImageDestroy($image);
+	}
+
+	/* Drawing a diagramm to show a participants distribution between countries */
+	function CreateCountryDiagramm($connect_id, $keyFieldName, $valueFieldName, $topValues, $caption, $width, $height)
+	{
+		$query = "SELECT ".$keyFieldName.", ".$valueFieldName." FROM VW_COUNTRY ORDER BY ".$valueFieldName." DESC";
+		$contries[0] = array($keyFieldName => "", $valueFieldName => 0);
+		$fileName = "img/diagramm_".strtolower($valueFieldName).".png";
+		$cursor_id = mysql_query($query);
+
+		if ($cursor_id > 0)
+		{
+			$i = 0;
+			$diagrammKeys = array(0);
+			$diagrammValues = array(0);
+
+			while ($row = mysql_fetch_array($cursor_id))
+			{
+				$diagrammKeys[$i] = $row[$keyFieldName];
+				$diagrammValues[$i] = $row[$valueFieldName];
+				$i++;
+			}
+		}
+
+		CreateDiagramm($diagrammKeys, $diagrammValues, $topValues, $fileName, $caption, $width, $height);
+		echo "<img src=".$fileName.">";
+	}
+
+	$config = get_config();
+	$host = parse_config($config, "<db_host>");
+	$database = parse_config($config, "<db_name>");;
+	$user = parse_config($config, "<db_user>");
+	$password = parse_config($config, "<db_passwd>");
+
+	$query =
 "SELECT
     @RN := @RN + 1 AS RANK,
     COUNTRY_NAME,
@@ -32,94 +190,136 @@
        FROM VW_COUNTRY) WORLD,
     (SELECT @RN := 0) RN";
 
-			$queryOrder ="";
-			$orderField = "";
-			$cursor_id = 0;
+	$queryOrder ="";
+	$orderField = "";
+	$cursor_id = 0;
 			
-			if (isset($_GET['sortby']))
-			{
-				$orderField = $_GET['sortby'];
-			}
-			else
-			{
-				$orderField = "Credit";
-			}
+	if (isset($_GET['sortby']))
+	{
+		$orderField = $_GET['sortby'];
+	}
+	else
+	{
+		$orderField = "Credit";
+	}
 			
-			switch ($orderField)
+	switch ($orderField)
+	{
+		case "Name":
+			$queryOrder = " ORDER BY COUNTRY_NAME";
+		break;
+
+		case "Users":
+			$queryOrder = " ORDER BY USERS_COUNT DESC";
+		break;
+
+		case "Credit":
+			$queryOrder = " ORDER BY COUNTRY_CREDIT DESC";
+		break;
+
+		case "RAC":
+			$queryOrder = " ORDER BY COUNTRY_RAC DESC";
+		break;
+
+		case "ParticipantsPCT":
+			$queryOrder = " ORDER BY USERS_PIECE DESC";
+		break;
+
+		case "CreditPCT":
+			$queryOrder = " ORDER BY CREDIT_PIECE DESC";
+		break;
+
+		case "RACPCT":
+			$queryOrder = " ORDER BY RAC_PIECE DESC";
+		break;
+
+		default:
+			$queryOrder = " ORDER BY COUNTRY_NAME";
+	}
+
+	$query = $query.$queryOrder;
+	$connect_id = mysql_pconnect($host, $user, $password);
+	mysql_set_charset('utf8', $connect_id);
+
+	if ($connect_id > 0)
+	{
+		$result = mysql_select_db($database, $connect_id);
+		$cursor_id = mysql_query($query);
+		if ($result > 0)
+		{
+			$contries[0] = array
+			(
+				"Rank" => 0,
+				"Name" => "",
+				"Participants" => 0,
+				"TotalCredit" => 0,
+				"RAC" => 0,
+				"ParticipantsPCT" => 0,
+				"CreditPCT" => 0,
+				"RACPCT" => 0
+			);
+
+			$rowIndex = 0;
+			$rowsCount = 0;
+			while ($row = mysql_fetch_array($cursor_id))
 			{
-				case "Name":
-					$queryOrder = " ORDER BY COUNTRY_NAME";
-				break;
+				$countries[$rowIndex] = array
+				(
+					"Rank" => $row["RANK"],
+					"Name" => $row["COUNTRY_NAME"],
+					"Participants" => $row["USERS_COUNT"],
+					"TotalCredit" => $row["COUNTRY_CREDIT"],
+					"RAC" => $row["COUNTRY_RAC"],
+					"ParticipantsPCT" => $row["USERS_PCT"],
+					"CreditPCT" => $row["CREDIT_PCT"],
+					"RACPCT" => $row["RAC_PCT"]
+				);
 
-				case "Users":
-					$queryOrder = " ORDER BY USERS_COUNT DESC";
-				break;
+				$rowIndex++;
+			}
+			$rowsCount = $rowIndex;
 
-				case "Credit":
-					$queryOrder = " ORDER BY COUNTRY_CREDIT DESC";
-				break;
+			page_head(tra("Top countries", "All"));
 
-				case "RAC":
-					$queryOrder = " ORDER BY COUNTRY_RAC DESC";
-				break;
+			CreateCountryDiagramm($connect_id, "COUNTRY_NAME", "COUNTRY_CREDIT", 12, "Credit division between countries", 300, 300);
+			CreateCountryDiagramm($connect_id, "COUNTRY_NAME", "COUNTRY_RAC", 12, "Recent credit division between countries", 300, 300);
+			CreateCountryDiagramm($connect_id, "COUNTRY_NAME", "USERS_COUNT", 12, "Participants division between countries", 300, 300);
 
-				case "ParticipantsPCT":
-					$queryOrder = " ORDER BY USERS_PIECE DESC";
-				break;
+			echo "<table>";
+			echo "<tr><td>Rank</td><td><a href=top_countries.php?sortby=Name>Country</a></td>".
+				"<td><a href=top_countries.php?sortby=Users>Participants</a></td>".
+				"<td><a href=top_countries.php?sortby=Credit>Total Credit</a></td>".
+				"<td><a href=top_countries.php?sortby=RAC>Recent Average Credit</a></td>".
+				"<td><a href=top_countries.php?sortby=ParticipantsPCT>% of participants</a></td>".
+				"<td><a href=top_countries.php?sortby=CreditPCT>% of credit</a></td>".
+				"<td><a href=top_countries.php?sortby=RACPCT>% of Recent Average Credit</a></td></tr>";
 
-				case "CreditPCT":
-					$queryOrder = " ORDER BY CREDIT_PIECE DESC";
-				break;
-
-				case "RACPCT":
-					$queryOrder = " ORDER BY RAC_PIECE DESC";
-				break;
-
-				default:
-					$queryOrder = " ORDER BY COUNTRY_NAME";
+			for ($rowIndex = 0; $rowIndex < $rowsCount; $rowIndex++)
+			{
+				echo "<tr><td>".$countries[$rowIndex]["Rank"]."</td>".
+					"<td>".$countries[$rowIndex]["Name"]."</td>".
+					"<td>".$countries[$rowIndex]["Participants"]."</td>".
+					"<td>".$countries[$rowIndex]["TotalCredit"]."</td>".
+					"<td>".$countries[$rowIndex]["RAC"]."</td>".
+					"<td>".$countries[$rowIndex]["ParticipantsPCT"]."</td>".
+					"<td>".$countries[$rowIndex]["CreditPCT"]."</td>".
+					"<td>".$countries[$rowIndex]["RACPCT"]."</td></tr>";
 			}
 
-			$query = $query.$queryOrder;
-			$connect_id = mysql_pconnect($host, $user, $password);
-			mysql_set_charset('utf8', $connect_id);
+			echo "</table>";
 
-			if ($connect_id > 0)
-			{
-				$result = mysql_select_db($database, $connect_id);
-				$cursor_id = mysql_query($query);
-				if ($result > 0)
-				{
-					page_head(tra("Top countries", "All"));
-
-					echo "<table>";
-					echo "<tr><td>Rank</td><td><a href=top_countries.php?sortby=Name>Country</a></td>".
-						"<td><a href=top_countries.php?sortby=Users>Participants</a></td>".
-						"<td><a href=top_countries.php?sortby=Credit>Total Credit</a></td>".
-						"<td><a href=top_countries.php?sortby=RAC>Recent Average Credit</a></td>".
-						"<td><a href=top_countries.php?sortby=ParticipantsPCT>% of participants</a></td>".
-						"<td><a href=top_countries.php?sortby=CreditPCT>% of credit</a></td>".
-						"<td><a href=top_countries.php?sortby=RACPCT>% of Recent Average Credit</a></td></tr>";
-
-					while ($row = mysql_fetch_array($cursor_id))
-					{
-						echo "<tr><td>".$row['RANK']."</td>".
-							"<td>".$row['COUNTRY_NAME']."</td>".
-							"<td>".$row['USERS_COUNT']."</td>".
-							"<td>".$row['COUNTRY_CREDIT']."</td>".
-							"<td>".$row['COUNTRY_RAC']."</td>".
-							"<td>".$row['USERS_PCT']."</td>".
-							"<td>".$row['CREDIT_PCT']."</td>".
-							"<td>".$row['RAC_PCT']."</td></tr>";
-					}
-
-					echo "</table>";
-
-					page_tail();
-				}
-			}
-			else
-			{
-				echo "		<p>Error while connect</p>";
-			}
-			$result = mysql_close($connect_id);
-		?>
+			page_tail();
+		}
+		else
+		{
+			page_head(tra("Top countries", "All"));
+			echo "<p>Error while retrive data</p>";
+			page_tail();
+		}
+	}
+	else
+	{
+		echo "<p>Error while connect</p>";
+	}
+	$result = mysql_close($connect_id);
+?>
