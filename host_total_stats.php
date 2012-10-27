@@ -80,7 +80,7 @@
 			{
 				$result = mysql_select_db($database, $connect_id);
 				$cursor_id = mysql_query($query);
-				if ($result > 0)
+				if ($cursor_id > 0)
 				{
 					$total_hosts = 0;
 					$total_hosts_with_credit = 0;
@@ -121,6 +121,7 @@
 							"</td><td>".$row['TOTAL_CREDIT'].
 							"</td><td>".$row['EXPAVG_CREDIT']."</td></tr>";
 					}
+					mysql_free_result($cursor_id);
 
 					echo "<tr><td>TOTAL:".
 						"</td><td>".$total_hosts.
@@ -135,10 +136,18 @@
 
 					page_tail();
 				}
+				else
+				{
+					page_head(tra("Host statistics", "All"));
+					echo "<p>Error while retrive data</p>";
+					page_tail();
+				}
 			}
 			else
 			{
-				echo "		<p>Error while connect</p>";
+				page_head(tra("Host statistics", "All"));
+				echo "<p>Error while connect</p>";
+				page_tail();
 			}
 			$result = mysql_close($connect_id);
 		?>

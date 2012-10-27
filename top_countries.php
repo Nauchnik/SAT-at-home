@@ -156,6 +156,7 @@
 				$i++;
 			}
 		}
+		mysql_free_result($cursor_id);
 
 		CreateDiagramm($diagrammKeys, $diagrammValues, $topValues, $fileName, $caption, $width, $height);
 		echo "<img src=".$fileName.">";
@@ -245,7 +246,7 @@
 	{
 		$result = mysql_select_db($database, $connect_id);
 		$cursor_id = mysql_query($query);
-		if ($result > 0)
+		if ($cursor_id > 0)
 		{
 			$contries[0] = array
 			(
@@ -277,6 +278,7 @@
 
 				$rowIndex++;
 			}
+			mysql_free_result($cursor_id);
 			$rowsCount = $rowIndex;
 
 			page_head(tra("Top countries", "All"));
@@ -319,7 +321,9 @@
 	}
 	else
 	{
+		page_head(tra("Top countries", "All"));
 		echo "<p>Error while connect</p>";
+		page_tail();
 	}
 	$result = mysql_close($connect_id);
 ?>
