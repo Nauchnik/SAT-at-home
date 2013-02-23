@@ -15,6 +15,7 @@
     COUNT(*) HOSTS_TOTAL,
     SUM(P_NCPUS) AS CORES_TOTAL,
     COUNT(CASE WHEN TOTAL_CREDIT > 0 THEN 1 ELSE NULL END) AS HOSTS_WITH_CREDIT,
+    COUNT(CASE WHEN RPC_TIME + 3600*24*30 > UNIX_TIMESTAMP(NOW()) THEN 1 ELSE NULL END) AS HOSTS_ACTIVE_LAST_MONTH,
     COUNT(CASE WHEN RPC_TIME + 3600*24*7 > UNIX_TIMESTAMP(NOW()) THEN 1 ELSE NULL END) AS HOSTS_ACTIVE_LAST_WEEK,
     COUNT(CASE WHEN RPC_TIME + 3600*24 > UNIX_TIMESTAMP(NOW()) THEN 1 ELSE NULL END) AS HOSTS_ACTIVE_LAST_DAY,
     FLOOR(SUM(TOTAL_CREDIT)) AS TOTAL_CREDIT,
@@ -52,6 +53,10 @@
 					$queryOrder = " ORDER BY HOSTS_WITH_CREDIT DESC";
 				break;
 
+				case "ActiveLastMonth":
+					$queryOrder = " ORDER BY HOSTS_ACTIVE_LAST_MONTH DESC";
+				break;
+
 				case "ActiveLastWeek":
 					$queryOrder = " ORDER BY HOSTS_ACTIVE_LAST_WEEK DESC";
 				break;
@@ -84,6 +89,7 @@
 				{
 					$total_hosts = 0;
 					$total_hosts_with_credit = 0;
+					$total_hosts_active_last_month = 0;
 					$total_hosts_active_last_week = 0;
 					$total_hosts_active_last_day = 0;
 					$total_hosts_credit = 0;
@@ -97,6 +103,7 @@
 						"<td><a href=host_total_stats.php?sortby=HostsTotal>Hosts</a></td>".
 						"<td><a href=host_total_stats.php?sortby=CoresTotal>Cores / Threads</a></td>".
 						"<td><a href=host_total_stats.php?sortby=HostsWithCredit>Hosts with credit</a></td>".
+						"<td><a href=host_total_stats.php?sortby=ActiveLastMonth>Active last month</a></td>".
 						"<td><a href=host_total_stats.php?sortby=ActiveLastWeek>Active last week</a></td>".
 						"<td><a href=host_total_stats.php?sortby=ActiveLastDay>Active last day</a></td>".
 						"<td><a href=host_total_stats.php?sortby=Credit>Total Credit</a></td>".
@@ -107,6 +114,7 @@
 						$total_hosts = $total_hosts + $row['HOSTS_TOTAL'];
 						$total_hosts_cores = $total_hosts_cores + $row['CORES_TOTAL'];
 						$total_hosts_with_credit = $total_hosts_with_credit + $row['HOSTS_WITH_CREDIT'];
+						$total_hosts_active_last_month = $total_hosts_active_last_month + $row['HOSTS_ACTIVE_LAST_MONTH'];
 						$total_hosts_active_last_week = $total_hosts_active_last_week + $row['HOSTS_ACTIVE_LAST_WEEK'];
 						$total_hosts_active_last_day = $total_hosts_active_last_day + $row['HOSTS_ACTIVE_LAST_DAY'];
 						$total_hosts_credit = $total_hosts_credit + $row['TOTAL_CREDIT'];
@@ -116,6 +124,7 @@
 							"</td><td>".$row['HOSTS_TOTAL'].
 							"</td><td>".$row['CORES_TOTAL'].
 							"</td><td>".$row['HOSTS_WITH_CREDIT'].
+							"</td><td>".$row['HOSTS_ACTIVE_LAST_MONTH'].
 							"</td><td>".$row['HOSTS_ACTIVE_LAST_WEEK'].
 							"</td><td>".$row['HOSTS_ACTIVE_LAST_DAY'].
 							"</td><td>".$row['TOTAL_CREDIT'].
@@ -127,6 +136,7 @@
 						"</td><td>".$total_hosts.
 						"</td><td>".$total_hosts_cores.
 						"</td><td>".$total_hosts_with_credit.
+						"</td><td>".$total_hosts_active_last_month.
 						"</td><td>".$total_hosts_active_last_week.
 						"</td><td>".$total_hosts_active_last_day.
 						"</td><td>".$total_hosts_credit.
