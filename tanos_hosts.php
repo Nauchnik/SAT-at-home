@@ -8,15 +8,15 @@
 	$user = parse_config($config, "<db_user>");
 	$password = parse_config($config, "<db_passwd>");
 	$query =
-"SELECT HOST.ID AS HOST_ID,
-       HOST.LAST_IP_ADDR AS HOST_IP_ADDR,
-       HOST.DOMAIN_NAME AS HOST_NAME,
+"SELECT host.ID AS HOST_ID,
+       host.LAST_IP_ADDR AS HOST_IP_ADDR,
+       host.DOMAIN_NAME AS HOST_NAME,
        DATE_FORMAT(FROM_UNIXTIME(RPC_TIME), '%Y.%m.%d %H:%i:%s') AS HOST_LAST_CONTACT,
        ROUND(EXPAVG_CREDIT, 0) AS HOST_AVERAGE_CREDIT,
        ROUND(TOTAL_CREDIT, 0) AS HOST_TOTAL_CREDIT,
        IFNULL(PENDING.RESULTS_COUNT, 0) AS RESULTS_IN_PENDING,
        IFNULL(PROGRESS.RESULTS_COUNT, 0) AS RESULTS_IN_PROGRESS
-  FROM HOST
+  FROM host
   LEFT
   JOIN
       (
@@ -28,7 +28,7 @@
 	       AND VALIDATE_STATE = 0
 	       AND USERID = 5871
 	 GROUP BY HOST_ID
-      ) AS PENDING ON PENDING.HOST_ID = HOST.ID
+      ) AS PENDING ON PENDING.HOST_ID = host.ID
   LEFT
   JOIN
       (
@@ -40,8 +40,8 @@
 	       AND VALIDATE_STATE = 0
 	       AND USERID = 5871
 	 GROUP BY HOST_ID
-      ) AS PROGRESS ON PROGRESS.HOST_ID = HOST.ID
- WHERE HOST.USERID = 5871";
+      ) AS PROGRESS ON PROGRESS.HOST_ID = host.ID
+ WHERE host.USERID = 5871";
 
 	$queryOrder ="";
 	$orderField = "";
