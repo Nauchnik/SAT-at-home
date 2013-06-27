@@ -1,3 +1,15 @@
+/* VW_HOST - Представление для отображения информации о компьютере для дальнейшего подведения статистики.
+	ID	- Идентификатор компьютера
+	USERID	- Идентификатор участника
+	VENDOR	- Общий Credit участников из данной страны
+	TOTAL_CREDIT	- Credit компьютера
+	EXPAVG_CREDIT	- Recent Average Creditr компьютера
+	RPC_TIME	- Время последнего обращения к серверу
+	P_NCPUS		- Число процессоров, ядер, потоков
+ */
+
+DROP VIEW VW_HOST;
+
 CREATE VIEW VW_HOST AS
 SELECT
     ID,

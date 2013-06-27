@@ -1,3 +1,12 @@
+/* VW_COUNTRY - Представление для отображения статистики стран.
+	COUNTRY_NAME	- Название страны
+	USERS_COUNT	- Число участников
+	COUNTRY_CREDIT	- Общий Credit участников из данной страны
+	COUNTRY_RAС	- Общий Recent Average Credit участников из данной страны
+ */
+
+DROP VIEW VW_COUNTRY;
+
 CREATE VIEW VW_COUNTRY AS
 SELECT
     CASE COUNTRY
