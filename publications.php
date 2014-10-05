@@ -5,6 +5,8 @@ require_once("../inc/translation.inc");
 
 page_head(tra('Publications and materials'));
 
+header('Content-Type: text/html;charset=UTF-8');
+
 echo "
 <p class='need_some_space'>
 <ul>
