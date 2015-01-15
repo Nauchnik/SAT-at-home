@@ -1,5 +1,3 @@
-DELIMITER // 
-
 CREATE PROCEDURE `Deadline`(IN Percent FLOAT)
 
 BEGIN  /*Старт процедуры */
@@ -18,46 +16,46 @@ BEGIN  /*Старт процедуры */
     SET variable2 = 0;  /* обнуление переменной */
         
     /*Подсчет количества юнитов выполненых за обозначенный интервал времени */ 
-    update deadline d
-	set d.count_units = (select COUNT(*) /* количество заносится в колонку d.count_units */
-	from result r
-	where r.validate_state in (1,2) /*учитываются только валидные и ожидающие подтверждения юниты */
-	and r.received_time-r.sent_time > 86400*d.Start_Day /*условия время выполнения*/
-	and r.received_time-r.sent_time <=86400*d.End_Day );
+    UPDATE deadline d
+	SET d.count_units = (SELECT COUNT(*) /* количество заносится в колонку d.count_units */
+	FROM result r
+	WHERE r.validate_state IN (1,2) /*учитываются только валидные и ожидающие подтверждения юниты */
+	AND r.received_time-r.sent_time > 86400*d.Start_Day /*условия время выполнения*/
+	AND r.received_time-r.sent_time <=86400*d.End_Day );
 
 	/*Подсчет процента количества выполненых юнитов за обозначенный интервал времени */
-	update deadline d
-	set d.Percentage_of_WU = d.Count_units/(select y.Un from (select sum(z.Count_units)/100 as Un from deadline z) y);  /*отношение количества юнитов выполненых за конкретный промежуток к количеству всех юнитов выполненых за "всё" время*/   
+	UPDATE deadline d
+	SET d.Percentage_of_WU = d.Count_units/(SELECT y.Un FROM (SELECT SUM(z.Count_units)/100 AS Un FROM deadline z) y);  /*отношение количества юнитов выполненых за конкретный промежуток к количеству всех юнитов выполненых за "всё" время*/   
     
     /*Обнуление дэдлайна по распределению*/
-    update deadline d
-	set d.Deadlinebyraspred ='0';   
+    UPDATE deadline d
+	SET d.Deadlinebyraspred ='0';   
     
     /*Обнуление дэдлайна*/
-    update deadline d
-	set d.Deadline ='0';   
+    UPDATE deadline d
+	SET d.Deadline ='0';   
     
     /*Цикл поиска дня в который достигается заданный процент выполненых юнитов*/
     WHILE variable1 <= Percent DO
     SET variable2 = variable2 + 1; 
-    SET variable1 = (select sum(Percentage_of_WU) as variable1 from deadline where End_Day <=variable2);
+    SET variable1 = (SELECT sum(Percentage_of_WU) AS variable1 FROM deadline WHERE End_Day <=variable2);
 	END WHILE; 
     
     /*Присвоение признака дэдлайна по распределению*/
-    update deadline d
-    set d.Deadlinebyraspred='1'
-    where d.End_Day=variable2; 
+    UPDATE deadline d
+    SET d.Deadlinebyraspred='1'
+    WHERE d.End_Day=variable2; 
     
     /*Присвоение признака дэдлайна исходя из распределения*/
-    update deadline d
-    set d.Deadline='1'
-    where d.End_Day=variable2; 
+    UPDATE deadline d
+    SET d.Deadline='1'
+    WHERE d.End_Day=variable2; 
     
 	SET Datetime = UNIX_TIMESTAMP(); /* значение времени в формате unix*/
-    SET AVG_CPU_Time_per_WU = (SELECT avg(r.cpu_time) FROM result r where r.validate_state in (1,2) and r.received_time >= Datetime - 86400);
-    SET Deadline_in_days =  (select d.End_Day from deadline d where d.deadline=1);
-	SET AVG_CPU_Time_per_WU_old = (SELECT avg(h.AVG_CPU_Time_per_WU) FROM deadline_history h where h.datetime < Datetime - 1800 and h.Datetime >= Datetime - h.Deadline_in_days*86400 - 1800);  /*1800 секунд - это домавка 30 минут на выполнение процедуры*/
-    SET AVG_Deadline_in_days = (SELECT avg(h.Deadline_in_days) FROM deadline_history h where h.datetime < Datetime - 1800 and h.Datetime >= Datetime - h.Deadline_in_days*86400 - 1800);
+    SET AVG_CPU_Time_per_WU = (SELECT avg(r.cpu_time) FROM result r WHERE r.validate_state IN (1,2) AND r.received_time >= Datetime - 86400);
+    SET Deadline_in_days =  (SELECT d.End_Day FROM deadline d WHERE d.deadline=1);
+	SET AVG_CPU_Time_per_WU_old = (SELECT avg(h.AVG_CPU_Time_per_WU) FROM deadline_history h WHERE h.datetime < Datetime - 1800 AND h.Datetime >= Datetime - h.Deadline_in_days*86400 - 1800);  /*1800 секунд - это домавка 30 минут на выполнение процедуры*/
+    SET AVG_Deadline_in_days = (SELECT avg(h.Deadline_in_days) FROM deadline_history h WHERE h.datetime < Datetime - 1800 AND h.Datetime >= Datetime - h.Deadline_in_days*86400 - 1800);
     SET Otnoshenie = AVG_CPU_Time_per_WU/AVG_CPU_Time_per_WU_old;
     
      /*Занесение исторических данных*/
@@ -65,32 +63,30 @@ BEGIN  /*Старт процедуры */
     
 	/*Проверка на необходимость увеличения дэлайна из-за увеличения среднего времени расчета 1 юнита */
 	IF Otnoshenie >= (SELECT d.Percent_for_up FROM deadline d WHERE d.deadline=1) THEN
-    update deadline_history d
-    set d.Deadline_in_days = Otnoshenie*AVG_Deadline_in_days
-    where d.Datetime=Datetime;
+    UPDATE deadline_history d
+    SET d.Deadline_in_days = Otnoshenie*AVG_Deadline_in_days
+    WHERE d.Datetime=Datetime;
     
     /*Присвоение признака дэдлайна исходя из-за изменения среднего времени расчета 1 юнита, включающее вначале обнуление поля*/
-	update deadline d
-    set d.Deadline='0';
-    update deadline d 
-    set d.Deadline='1' 
-    where d.End_Day=(select h.Deadline_in_days from deadline_history h where h.Datetime=Datetime);
+	UPDATE deadline d
+    SET d.Deadline='0';
+    UPDATE deadline d 
+    SET d.Deadline='1' 
+    WHERE d.End_Day=(SELECT h.Deadline_in_days FROM deadline_history h WHERE h.Datetime=Datetime);
     END IF; 
     
     /*Проверка на необходимость уменьшения делайна из-за уменьшения среднего времени расчета 1 юнита */
 	IF Otnoshenie <= (SELECT d.Percent_for_down FROM deadline d WHERE d.deadline=1) THEN
     
-    update deadline_history d
-    set d.Deadline_in_days = Otnoshenie*AVG_Deadline_in_days
-    where d.Datetime=Datetime;
+    UPDATE deadline_history d
+    SET d.Deadline_in_days = Otnoshenie*AVG_Deadline_in_days
+    WHERE d.Datetime=Datetime;
     
     /*Присвоение признака дэдлайна исходя из-за изменения среднего времени расчета 1 юнита, включающее вначале обнуление поля*/
-	update deadline d
-    set d.Deadline='0';
-    update deadline d 
-    set d.Deadline='1' 
-    where d.End_Day=(select h.Deadline_in_days from deadline_history h where h.Datetime=Datetime); 	
+	UPDATE deadline d
+    SET d.Deadline='0';
+    UPDATE deadline d 
+    SET d.Deadline='1' 
+    WHERE d.End_Day=(SELECT h.Deadline_in_days FROM deadline_history h WHERE h.Datetime=Datetime); 	
     END IF;
-END //
-
-CALL Deadline(97);
+END 
