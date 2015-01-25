@@ -1,27 +1,72 @@
 #!/bin/sh
-db="boinc_pdsat"
 
-bivium_update="UPDATE RESEARCH_PROGRESS
-   SET WORKUNITS_DELETED = WORKUNITS_DELETED + (SELECT COUNT(*) FROM workunit WHERE MOD_TIME < DATE(NOW() - INTERVAL 20 DAY) AND ASSIMILATE_STATE > 0 AND NAME LIKE '%bivium%')
- WHERE WORKUNITS_MASK = '%bivium%'"
-bivium_result_delete="DELETE FROM result WHERE mod_time < DATE(NOW() - INTERVAL 20 DAY) AND validate_state > 0 AND NAME LIKE '%bivium%'"
-bivium_workunit_delete="DELETE FROM workunit WHERE mod_time < DATE(NOW() - INTERVAL 20 DAY) AND assimilate_state > 0 AND NAME LIKE '%bivium%'"
+# Clean old results, workunits and store of number of deleted WU's in RESEARCH_PROGRESS table
 
-a5_1_114_update="UPDATE RESEARCH_PROGRESS
-   SET WORKUNITS_DELETED = WORKUNITS_DELETED + (SELECT COUNT(*) FROM workunit WHERE MOD_TIME < DATE(NOW() - INTERVAL 30 DAY) AND ASSIMILATE_STATE > 0 AND NAME LIKE '%a5_1_114%')
+db="boinc_pdsat"					# Project database name
+retention_days=14					# Days to which we retain completed results and workunits
+dateLine="--- $(date "+%Y.%m.%d %H:%M") ---"		# Line with date mark for operation log
+
+
+
+# Section of Bivium9 research
+exp9_bivium9_progress="UPDATE RESEARCH_PROGRESS
+   SET WORKUNITS_DELETED = WORKUNITS_DELETED + (SELECT COUNT(*) FROM workunit WHERE MOD_TIME < DATE(NOW() - INTERVAL $retention_days DAY) AND ASSIMILATE_STATE > 0 AND NAME LIKE '%bivium9%')
+ WHERE WORKUNITS_MASK = '%bivium9%'"
+
+exp9_bivium9_results="DELETE FROM result WHERE mod_time < DATE(NOW() - INTERVAL $retention_days DAY) AND validate_state > 0 AND NAME LIKE '%bivium9%'"
+exp9_bivium9_workunits="DELETE FROM workunit WHERE mod_time < DATE(NOW() - INTERVAL $retention_days DAY) AND assimilate_state > 0 AND NAME LIKE '%bivium9%'"
+
+# Section of Bivium research
+exp10_bivium_progress="UPDATE RESEARCH_PROGRESS
+   SET WORKUNITS_DELETED = WORKUNITS_DELETED + (SELECT COUNT(*) FROM workunit WHERE MOD_TIME < DATE(NOW() - INTERVAL $retention_days DAY) AND ASSIMILATE_STATE > 0 AND NAME LIKE '%bivium_0%')
+ WHERE WORKUNITS_MASK = '%bivium_0%'"
+
+exp10_bivium_results="DELETE FROM result WHERE mod_time < DATE(NOW() - INTERVAL $retention_days DAY) AND validate_state > 0 AND NAME LIKE '%bivium_0%'"
+exp10_bivium_workunits="DELETE FROM workunit WHERE mod_time < DATE(NOW() - INTERVAL $retention_days DAY) AND assimilate_state > 0 AND NAME LIKE '%bivium_0%'"
+
+# Section of A5/1 generator research
+a5_1_114_progress="UPDATE RESEARCH_PROGRESS
+   SET WORKUNITS_DELETED = WORKUNITS_DELETED + (SELECT COUNT(*) FROM workunit WHERE MOD_TIME < DATE(NOW() - INTERVAL $retention_days DAY) AND ASSIMILATE_STATE > 0 AND NAME LIKE '%a5_1_114%')
  WHERE WORKUNITS_MASK = '%a5_1_114%'"
-a5_1_114_delete="DELETE FROM result WHERE mod_time < DATE(NOW() - INTERVAL 30 DAY) AND validate_state > 0 AND NAME LIKE '%a5_1_114%' "
-a5_1_114_workunit_delete="DELETE FROM workunit WHERE mod_time < DATE(NOW() - INTERVAL 30 DAY) AND assimilate_state > 0 AND NAME LIKE '%a5_1_114%'"
 
+a5_1_114_results="DELETE FROM result WHERE mod_time < DATE(NOW() - INTERVAL $retention_days DAY) AND validate_state > 0 AND NAME LIKE '%a5_1_114%'"
+a5_1_114_workunits="DELETE FROM workunit WHERE mod_time < DATE(NOW() - INTERVAL $retention_days DAY) AND assimilate_state > 0 AND NAME LIKE '%a5_1_114%'"
+
+# Query to remove results left without workunits
 orphan_results_delete="DELETE FROM result WHERE workunitid NOT IN(SELECT id FROM workunit)"
 
+echo ""
+echo $dateLine
+echo "Clean project database $db from old results and workunits data"
+echo "--------------------------------"
+echo "Bivium9 research clean queries:"
+echo $exp9_bivium9_progress
+echo $exp9_bivium9_results
+echo $exp9_bivium9_workunits
+echo "--------------------------------"
+echo "exp10_bivium research clean queries:"
+echo $exp10_bivium_progress
+echo $exp10_bivium_results
+echo $exp10_bivium_workunits
+echo "--------------------------------"
+echo "A5/1 research clean queries:"
+echo $a5_1_114_progress
+echo $a5_1_114_results
+echo $a5_1_114_workunits
+echo "--------------------------------"
+
+echo "Start to queries execution"
+
 mysql --defaults-extra-file=/var/lib/boinc/pdsat/.my.cnf << EOF
-    use $db;
-    $bivium_update;
-    $bivium_result_delete;
-    $bivium_workunit_delete;
-    $a5_1_114_update;
-    $a5_1_114_result_delete;
-    $a5_1_114_workunit_delete;
+use $db;
+    $exp9_bivium9_progress;
+    $exp9_bivium9_results;
+    $exp9_bivium9_workunits;
+    $exp10_bivium_progress;
+    $exp10_bivium_results;
+    $exp10_bivium_workunits;
+    $a5_1_114_progress;
+    $a5_1_114_results;
+    $a5_1_114_workunits;
     $orphan_results_delete;
 EOF
