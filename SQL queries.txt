@@ -1,4 +1,6 @@
 // select all workunits with error results (excepting errors 'abort by user')
 SELECT * FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
+// select all workunits with error results (excepting errors 'abort by user') and which were not canelled
+SELECT * FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6) AND error_mask<16
 // cancel workunits with error results (excepting errors 'abort by user')
-UPDATE workunit SET error_mask=16 WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
+UPDATE workunit SET error_mask=16 WHERE error_mask < 16 AND id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
