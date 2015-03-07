@@ -1,6 +1,17 @@
+// manually assimilate error workunits
+UPDATE workunit SET assimilate_state=2 WHERE assimilate_state=1
 // select all workunits with error results (excepting errors 'abort by user')
 SELECT * FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
 // select all workunits with error results (excepting errors 'abort by user') and which were not canelled
 SELECT * FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6) AND error_mask<16
 // cancel workunits with error results (excepting errors 'abort by user')
 UPDATE workunit SET error_mask=16 WHERE error_mask < 16 AND id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
+// WUs with 2 init results and 1 abort result with date interval
+select * from workunit wu
+left join (select workunitid, count(*) as CNT from result where server_state=4 group by workunitid) res on wu.id=res.workunitid
+left join (select workunitid, count(*) as CNT from result where client_state=6 group by workunitid) res2 on wu.id=res2.workunitid
+WHERE res.CNT >=2
+and res2.CNT >=1
+AND wu.create_time >1424981178
+AND wu.create_time <1425412029
+AND wu.error_mask < 16
