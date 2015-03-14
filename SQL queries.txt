@@ -12,6 +12,8 @@ left join (select workunitid, count(*) as CNT from result where server_state=4 g
 left join (select workunitid, count(*) as CNT from result where client_state=6 group by workunitid) res2 on wu.id=res2.workunitid
 WHERE res.CNT >=2
 and res2.CNT >=1
-AND wu.create_time >1424981178
-AND wu.create_time <1425412029
+AND wu.create_time >1422989641
+AND wu.create_time <1425967272
 AND wu.error_mask < 16
+// check how many WUs from time interval where not cancelled
+SELECT * FROM workunit WHERE error_mask<16 AND create_time>1422989641 AND create_time<1425967272
