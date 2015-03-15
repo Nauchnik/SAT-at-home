@@ -15,5 +15,7 @@ and res2.CNT >=1
 AND wu.create_time >1422989641
 AND wu.create_time <1425967272
 AND wu.error_mask < 16
-// check how many WUs from time interval where not cancelled
-SELECT * FROM workunit WHERE error_mask<16 AND create_time>1422989641 AND create_time<1425967272
+// check how many WUs from time interval where not cancelled and processed
+SELECT * FROM workunit WHERE assimilate_state<2 AND error_mask<16 AND create_time>1422989641 AND create_time<1425967272
+// create file with right permissions
+sudo chown www-data:boinc-pdsat ./file_upload_handler.log
