@@ -21,3 +21,4 @@ SELECT * FROM workunit WHERE assimilate_state<2 AND error_mask<16 AND create_tim
 sudo chown www-data:boinc-pdsat ./file_upload_handler.log
 
 nohup /var/lib/boinc/pdsat/project/bin/pdsat_work_generator /var/lib/boinc/pdsat/project/bin/work_generator_config.conf /var/lib/boinc/pdsat/project/bin/pass &> /var/lib/boinc/pdsat/project/bin/work_generator_out &
+SELECT * FROM deadline_hist order by appid, app_version_num,datetime
