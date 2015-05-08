@@ -22,3 +22,5 @@ sudo chown www-data:boinc-pdsat ./file_upload_handler.log
 
 nohup /var/lib/boinc/pdsat/project/bin/pdsat_work_generator /var/lib/boinc/pdsat/project/bin/work_generator_config.conf /var/lib/boinc/pdsat/project/bin/pass &> /var/lib/boinc/pdsat/project/bin/work_generator_out &
 SELECT * FROM deadline_hist order by appid, app_version_num,datetime
+// count users with no team, credits and hosts
+SELECT COUNT( * ) FROM user WHERE teamid =0 AND total_credit =0 AND id NOT IN (SELECT userid FROM host)
