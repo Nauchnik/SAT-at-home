@@ -24,3 +24,5 @@ nohup /var/lib/boinc/pdsat/project/bin/pdsat_work_generator /var/lib/boinc/pdsat
 SELECT * FROM deadline_hist order by appid, app_version_num,datetime
 // count users with no team, credits and hosts
 SELECT COUNT( * ) FROM user WHERE teamid =0 AND total_credit =0 AND id NOT IN (SELECT userid FROM host)
+// count teams without users and credits
+SELECT COUNT(*) FROM team WHERE nusers=0 AND total_credit=0
