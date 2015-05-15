@@ -4,4 +4,4 @@ service apache2 start
 // перезапуск БД
 sudo /etc/init.d/mysql restart
 // починить сломанную таблицу в БД
-myisamchk -r crashed-table (в файловой системе)
+myisamchk -r -f -o table_file (в файловой системе)

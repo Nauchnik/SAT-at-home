@@ -28,3 +28,5 @@ SELECT COUNT(*) FROM user WHERE teamid =0 AND total_credit =0 AND id NOT IN (SEL
 SELECT COUNT(*) FROM team WHERE nusers=0 AND total_credit=0
 // delete posts with users not from table user
 SELECT COUNT(*) FROM post WHERE user NOT IN(SELECT id FROM user)
+// delete profiles without users
+DELETE FROM profile WHERE userid NOT IN(SELECT id FROM user)
