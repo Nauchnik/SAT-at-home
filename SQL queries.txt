@@ -30,3 +30,5 @@ SELECT COUNT(*) FROM team WHERE nusers=0 AND total_credit=0
 SELECT COUNT(*) FROM post WHERE user NOT IN(SELECT id FROM user)
 // delete profiles without users
 DELETE FROM profile WHERE userid NOT IN(SELECT id FROM user)
+// fix profile connection crash
+UPDATE user SET has_profile=1 WHERE id IN(SELECT userid FROM profile) 
