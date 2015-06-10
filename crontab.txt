@@ -1,0 +1,33 @@
+# Ensure that config.xml can be found
+BOINC_PROJECT_DIR="/var/lib/boinc/pdsat/project"
+
+# Make dump of DB every 2 weeks
+# old command - every month: 0 1 * * * /var/lib/boinc/pdsat/project/bin/mysql_dump.sh
+0 0 * * 0/2 /var/lib/boinc/pdsat/project/bin/mysql_dump.sh
+
+# Delete old data from DB every day at 6:00
+0 6 * * * /var/lib/boinc/pdsat/project/bin/delete_old_data.sh >> /var/lib/boinc/pdsat/project/bin/delete_old_data.log
+
+# Perform maintenance every 5 minutes
+0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/bin/start --cron
+
+# Daily log rotation
+12 6 * * * test -x /usr/sbin/logrotate && test -e "/var/lib/boinc/pdsat/project/pdsat.logrotate.conf" && /usr/sbin/logrotate -s "/var/lib/boinc/pdsat/project/pdsat.logrotate.state" "/var/lib/boinc/pdsat/project/pdsat.logrotate.conf"
+
+# Updating statistics for SAT@home bages
+5 * * * * /var/lib/boinc/pdsat/project/bin/update_bage_statistics.sh >> update_bage_statistics.log
+
+# Update deadline history every day at 1:00
+0 1 * * * /var/lib/boinc/pdsat/project/bin/update_deadline_history.sh >> /var/lib/boinc/pdsat/project/bin/update_deadline_history.log
+
+# Delete spam data from DB every day at 1:00
+0 1 * * * /var/lib/boinc/pdsat/project/bin/delete_spammers.sh >> /var/lib/boinc/pdsat/project/bin/delete_spammers.log
+
+# Perform assimilation of results every 20 minutes
+*/20 * * * * /var/lib/boinc/pdsat/project/bin/assimilate.sh >> /var/lib/boinc/pdsat/project/bin/assimilate.log
+
+# Touch log files every 5 minutes
+#0,5,10,15,20,25,30,35,40,45,50,55 * * * * touch /var/lib/boinc/pdsat/project/log_sat/file_upload_handler.log &&.
+#chown www-data:boinc-pdsat /var/lib/boinc/pdsat/project/log_sat/file_upload_handler.log
+#0,5,10,15,20,25,30,35,40,45,50,55 * * * * touch /var/lib/boinc/pdsat/project/log_sat/scheduler.log &&.
+#chown www-data:boinc-pdsat /var/lib/boinc/pdsat/project/log_sat/scheduler.log
