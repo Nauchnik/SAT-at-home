@@ -2,7 +2,6 @@
 BOINC_PROJECT_DIR="/var/lib/boinc/pdsat/project"
 
 # Make dump of DB every 2 weeks
-# old command - every month: 0 1 * * * /var/lib/boinc/pdsat/project/bin/mysql_dump.sh
 0 0 * * 0/2 /var/lib/boinc/pdsat/project/bin/mysql_dump.sh
 
 # Delete old data from DB every day at 6:00
@@ -12,7 +11,7 @@ BOINC_PROJECT_DIR="/var/lib/boinc/pdsat/project"
 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/bin/start --cron
 
 # Daily log rotation
-12 6 * * * test -x /usr/sbin/logrotate && test -e "/var/lib/boinc/pdsat/project/pdsat.logrotate.conf" && /usr/sbin/logrotate -s "/var/lib/boinc/pdsat/project/pdsat.logrotate.state" "/var/lib/boinc/pdsat/project/pdsat.logrotate.conf"
+12 6 * * * test -x /usr/sbin/logrotate && test -e "/var/lib/boinc/pdsat/project/pdsat.logrotate.conf" && /usr/sbin/logrotate -s "/var/lib/boinc/pdsat/project/pdsat.logrotate.state" "/var/lib
 
 # Updating statistics for SAT@home bages
 5 * * * * /var/lib/boinc/pdsat/project/bin/update_bage_statistics.sh >> update_bage_statistics.log
@@ -21,7 +20,10 @@ BOINC_PROJECT_DIR="/var/lib/boinc/pdsat/project"
 0 1 * * * /var/lib/boinc/pdsat/project/bin/update_deadline_history.sh >> /var/lib/boinc/pdsat/project/bin/update_deadline_history.log
 
 # Delete spam data from DB every day at 1:00
-0 1 * * * /var/lib/boinc/pdsat/project/bin/delete_spammers.sh >> /var/lib/boinc/pdsat/project/bin/delete_spammers.log
+0 * * * * /var/lib/boinc/pdsat/project/bin/delete_spammers.sh >> /var/lib/boinc/pdsat/project/bin/delete_spammers.log
+
+# Calculate performance from CluBORun's clusters every dat at 2:00
+0 2 * * * /var/lib/boinc/pdsat/project/bin/calculate_cluster_performance.sh >> /var/lib/boinc/pdsat/project/bin/calculate_cluster_performance.log
 
 # Perform assimilation of results every 20 minutes
 */20 * * * * /var/lib/boinc/pdsat/project/bin/assimilate.sh >> /var/lib/boinc/pdsat/project/bin/assimilate.log
