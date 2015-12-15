@@ -1,0 +1,35 @@
+﻿Build started 16.12.2015 1:20:48.
+     1>Project "D:\Programming\SAT-at-home\VS2013_boinc_work_generator\VS2012_work_generator.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I../.. /I../../pdsat/src_common/ /I../../pdsat/src_common/minisat/ /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\pdsat\src_common\latin_squares.cpp ..\src_boinc_work_generator\work_generator.cpp
+         work_generator.cpp
+     1>d:\programming\pdsat\src_common\minisat\core\solvertypes.h(97): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+     1>d:\programming\pdsat\src_common\minisat\core\solvertypes.h(130): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>d:\programming\pdsat\src_common\minisat\core\solver.h(338): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>d:\programming\pdsat\src_common\minisat\core\solver.h(341): warning C4305: '*=' : truncation from 'double' to 'float'
+         Unknown compiler version - please run the configure tests and report the results
+         Generating Code...
+         Compiling...
+         latin_squares.cpp
+     1>d:\programming\pdsat\src_common\minisat\core\solvertypes.h(97): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+     1>d:\programming\pdsat\src_common\minisat\core\solvertypes.h(130): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>d:\programming\pdsat\src_common\minisat\core\solver.h(338): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>d:\programming\pdsat\src_common\minisat\core\solver.h(341): warning C4305: '*=' : truncation from 'double' to 'float'
+         Unknown compiler version - please run the configure tests and report the results
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Programming\SAT-at-home\VS2013_boinc_work_generator\Debug\VS2012_work_generator.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Programming\SAT-at-home\VS2013_boinc_work_generator\Debug\VS2012_work_generator.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Programming\SAT-at-home\VS2013_boinc_work_generator\Debug\VS2012_work_generator.lib" /MACHINE:X86 Debug\addit_func.obj
+         Debug\latin_squares.obj
+         Debug\minisat22_wrapper.obj
+         Debug\Solver.obj
+         Debug\Options.obj
+         Debug\System.obj
+         Debug\work_generator.obj
+         VS2012_work_generator.vcxproj -> D:\Programming\SAT-at-home\VS2013_boinc_work_generator\Debug\VS2012_work_generator.exe
+     1>Done Building Project "D:\Programming\SAT-at-home\VS2013_boinc_work_generator\VS2012_work_generator.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.02

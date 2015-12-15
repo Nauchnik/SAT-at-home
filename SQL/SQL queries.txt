@@ -1,0 +1,34 @@
+// manually assimilate error workunits
+UPDATE workunit SET assimilate_state=2 WHERE assimilate_state=1
+// select all workunits with error results (excepting errors 'abort by user')
+SELECT * FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
+// select all workunits with error results (excepting errors 'abort by user') and which were not canelled
+SELECT * FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6) AND error_mask<16
+// cancel workunits with error results (excepting errors 'abort by user')
+UPDATE workunit SET error_mask=16 WHERE error_mask < 16 AND id IN(SELECT workunitid FROM result WHERE outcome=3 AND client_state<6)
+// WUs with 2 init results and 1 abort result with date interval
+select * from workunit wu
+left join (select workunitid, count(*) as CNT from result where server_state=4 group by workunitid) res on wu.id=res.workunitid
+left join (select workunitid, count(*) as CNT from result where client_state=6 group by workunitid) res2 on wu.id=res2.workunitid
+WHERE res.CNT >=2
+and res2.CNT >=1
+AND wu.create_time >1422989641
+AND wu.create_time <1425967272
+AND wu.error_mask < 16
+// check how many WUs from time interval where not cancelled and processed
+SELECT * FROM workunit WHERE assimilate_state<2 AND error_mask<16 AND create_time>1422989641 AND create_time<1425967272
+// create file with right permissions
+sudo chown www-data:boinc-pdsat ./file_upload_handler.log
+
+nohup /var/lib/boinc/pdsat/project/bin/pdsat_work_generator /var/lib/boinc/pdsat/project/bin/work_generator_config.conf /var/lib/boinc/pdsat/project/bin/pass &> /var/lib/boinc/pdsat/project/bin/work_generator_out &
+SELECT * FROM deadline_hist order by appid, app_version_num,datetime
+// count users with no team, credits and hosts
+SELECT COUNT(*) FROM user WHERE teamid =0 AND total_credit =0 AND id NOT IN (SELECT userid FROM host)
+// count teams without users and credits
+SELECT COUNT(*) FROM team WHERE nusers=0 AND total_credit=0
+// delete posts with users not from table user
+SELECT COUNT(*) FROM post WHERE user NOT IN(SELECT id FROM user)
+// delete profiles without users
+DELETE FROM profile WHERE userid NOT IN(SELECT id FROM user)
+// fix profile connection crash
+UPDATE user SET has_profile=1 WHERE id IN(SELECT userid FROM profile) 
