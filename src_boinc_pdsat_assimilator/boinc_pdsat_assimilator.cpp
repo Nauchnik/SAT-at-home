@@ -205,6 +205,7 @@ void touchBoincResultFiles()
 
 void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 {
+	std::stringstream MOLS_out_sstream;
 	std::cout << "wu_name_part " << wu_name_part << std::endl;
 	std::vector< std::vector<std::stringstream *> > result_vec;
 	std::string str = "SELECT id FROM result WHERE workunitid IN(SELECT id FROM workunit WHERE name LIKE '%" + wu_name_part + "%')";
@@ -231,9 +232,12 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 			resultid_vec.push_back(u_val);
 			delete result_vec[i][j];
 		}
-	result_vec.clear();
 
 	for (std::vector<int>::iterator it = resultid_vec.begin(); it != resultid_vec.end(); it++) {
+		MOLS_out_sstream << "wu_name_part " << wu_name_part << std::endl;
+		MOLS_out_sstream << "result_vec.size() " << result_vec.size() << std::endl;
+		MOLS_out_sstream << "resultid_vec.size() " << resultid_vec.size() << std::endl;
+		MOLS_out_sstream << "workunitid " << *it << std::endl << std::endl;
 		sstream << "SELECT userid, teamid, mod_time FROM result WHERE validate_state = 1 AND id=" << *it;
 		str = sstream.str();
 		sstream.clear(); sstream.str("");
@@ -258,6 +262,8 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 		}
 		result_vec.clear();
 	}
+	
+	result_vec.clear();
 
 	std::cout << "teamid_vec:" << std::endl;
 	for (unsigned i = 0; i < teamid_vec.size(); i++)
@@ -301,7 +307,6 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 	}
 
 	std::ofstream MOLS_out_file("MOLS_out", std::ios_base::app);
-	std::stringstream MOLS_out_sstream;
 	
 	MOLS_out_sstream << "<tr>" << std::endl << "<td> 1 </td>" << 
 		                "<td> <b>" << mod_time_vec[0] << " UTC </b> </td>" << std::endl;
