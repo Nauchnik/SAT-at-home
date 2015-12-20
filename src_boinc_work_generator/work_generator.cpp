@@ -509,12 +509,18 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 			system_str = "cp tmp_wu_file `dir_hier_path " + cur_wu_input_file_name + "`";
 			std::cout << "before system command : " << system_str << std::endl; 
 			system(system_str.c_str());
+#ifndef _WIN32
+			sleep(1); // wait
+#endif
 			//std::cout << "after system command" << std::endl;
 			system_str = "create_work -appname pdsat -wu_name " + wu_name +
 				" -wu_template templates/workunit_template_ls_diag10_2_10N2R9K.xml" +
 				" -result_template templates/result_template_ls_diag10_2_10N2R9K.xml " + cur_wu_input_file_name;
 			std::cout << "before system command : " << system_str << std::endl;
 			system(system_str.c_str());
+#ifndef _WIN32
+			sleep(1); // wait
+#endif
 			
 			new_created_wus++;
 		}
