@@ -41,8 +41,9 @@ int main( int argc, char *argv[] )
 	char *db = "boinc_pdsat";
 	char *user = "boinc_pdsat";
 	char *pass = argv[1];
-
-	touchBoincResultFiles(); // touch files from errors files
+	
+	// touch files from file 'errors' and 
+	touchBoincResultFiles(); 
 									
 	std::vector<std::string> file_names = std::vector<std::string>();
 	getdir( ".", file_names );
@@ -92,7 +93,8 @@ int main( int argc, char *argv[] )
 	ofile.close();
 	
 	// read sat from file
-	std::ifstream sat_file("sat_output");
+	std::string sat_output_file_name = "sat_output";
+	std::ifstream sat_file(sat_output_file_name.c_str());
 	MYSQL *conn;
 	conn = mysql_init(NULL);
 	if (conn == NULL)
@@ -126,6 +128,12 @@ int main( int argc, char *argv[] )
 		MakeHTMLfromWU(conn, wu_part_name, pair);
 	}
 	sat_file.close();
+												   
+	// delete file with SAT answer after reading it
+	system_str = "rm ";
+	system_str += sat_output_file_name;
+	std::cout << "system_str " << system_str << std::endl;
+	system(system_str.c_str());
 	
 	std::cout << "*** done" << std::endl;
 }

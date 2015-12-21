@@ -79,7 +79,7 @@ void parse_config_file( std::string &cnf_head );
 static void create_wus( latin_square &ls, config_params_crypto &config_p, std::string cnf_head,
 					    unsigned long long wus_for_creation_count, bool &IsLastGenerating );
 #ifndef _WIN32
-void GetCountOfUnsentWUs( long long &unsent_count );
+void GetCountOfUnsentWUs( unsigned long long &unsent_count );
 bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec );
 #endif
 
@@ -624,7 +624,7 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 }
 
 #ifndef _WIN32
-void GetCountOfUnsentWUs( long long &unsent_count )
+void GetCountOfUnsentWUs( unsigned long long &unsent_count )
 {
 	char *host = "localhost";
     char *db;
