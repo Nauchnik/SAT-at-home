@@ -65,14 +65,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\pdsat\src_common\Mols.cpp" />
     <ClCompile Include="..\src_boinc_pdsat_assimilator\boinc_pdsat_assimilator.cpp" />
-    <ClCompile Include="..\src_common\Mols.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src_boinc_pdsat_assimilator\Makefile" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src_common\Mols.h" />
+    <ClInclude Include="..\..\pdsat\src_common\Mols.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

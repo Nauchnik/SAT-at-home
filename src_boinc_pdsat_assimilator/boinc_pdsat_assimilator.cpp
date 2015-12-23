@@ -42,7 +42,8 @@ int main( int argc, char *argv[] )
 	char *user = "boinc_pdsat";
 	char *pass = argv[1];
 	
-	// touch files from file 'errors' and 
+	// touch files from file 'errors' for correct work of assimilator
+	// TODO delete after migrating to the new BOINC server
 	touchBoincResultFiles(); 
 									
 	std::vector<std::string> file_names = std::vector<std::string>();
@@ -54,47 +55,57 @@ int main( int argc, char *argv[] )
 	program_name.erase( std::remove(program_name.begin(), program_name.end(), '.'), program_name.end() );
 	program_name.erase( std::remove(program_name.begin(), program_name.end(), '/'), program_name.end() );
 	std::cout << "program_name " << program_name << std::endl;
-	std::stringstream sstream, final_sstream, sat_sstream;
-	bool isCorrectFile;
-	
+	std::stringstream sstream, final_sstream;
+	bool isCorrectUnusefulFile, isSATfile;
+	std::string sat_output_file_name = "sat_output";
+	std::string sat_result_output_file_name;
+		
 	for ( unsigned i=0; i < file_names.size(); i++ ) {
+		// skip files with no results
 		if ( ( file_names[i].find( "assimilator" ) != std::string::npos ) || 
 			 ( file_names[i].find( "output" ) != std::string::npos ) ||
-			 ( file_names[i].find( "out" ) != std::string::npos )
+			 ( file_names[i].find( "out" ) != std::string::npos ) ||
+			 ( file_names[i].find( "MOLS" ) != std::string::npos )
 			 )
 			continue;
 		ifile.open(file_names[i].c_str());
-		isCorrectFile = false;
+		isCorrectUnusefulFile = false;
+		isSATfile = false;
+		sstream << file_names[i] << std::endl;
 		while (getline(ifile, str)) {
 			// check if file contain result SAT@home info
 			if ((str.find("UNSAT") != std::string::npos) || (str.find("INTERRUPTED") != std::string::npos))
-				isCorrectFile = true;
+				isCorrectUnusefulFile = true;
 			if (str.find(" SAT") != std::string::npos) {
+				isSATfile = true;
 				std::cout << "SAT found" << std::endl;
-				std::ofstream sat_out("sat_output", std::ios_base::app);
+				std::ofstream sat_out(sat_output_file_name.c_str(), std::ios_base::app);
 				sat_out << file_names[i] << " " << str << std::endl;
 				sat_out.close(); sat_out.clear();
 			}
-			sstream << str;
-		}
+			sstream << str << std::endl;
+		}						 
 		ifile.close(); ifile.clear();
-		if (isCorrectFile) {
+		// delele correct result files with no useful data
+		if (isCorrectUnusefulFile) {
 			final_sstream << file_names[i] << " " << sstream.str() << std::endl;
 			system_str = "rm ";
 			system_str += file_names[i];
 			std::cout << "system_str " << system_str << std::endl;
 			system(system_str.c_str());
 		}
+		if ( isSATfile ) {
+			sat_result_output_file_name = "SAT_result_" + file_names[i];
+			std::ofstream ofile(sat_result_output_file_name.c_str());
+			ofile << sstream.rdbuf();
+			ofile.close();
+		}
 		sstream.clear(); sstream.str("");
 	}
 	
-	std::ofstream ofile( "final_output", std::ios_base::app );
-	ofile << final_sstream.rdbuf();
-	ofile.close();
-	
 	// read sat from file
-	std::string sat_output_file_name = "sat_output";
 	std::ifstream sat_file(sat_output_file_name.c_str());
+#ifndef _WIN32
 	MYSQL *conn;
 	conn = mysql_init(NULL);
 	if (conn == NULL)
@@ -103,6 +114,7 @@ int main( int argc, char *argv[] )
 	// Устанавливаем соединение с базой данных
 	if (!mysql_real_connect(conn, host, user, pass, db, 0, NULL, 0))
 		std::cerr << "Error: can't connect to MySQL server" << std::endl;
+#endif
 	
 	// Устанавливаем кодировку соединения, чтобы предотвратить
 	// искажения русского текста
@@ -125,7 +137,9 @@ int main( int argc, char *argv[] )
 		sstream << str;
 		sstream >> wu_part_name;
 		sstream.str(""); sstream.clear();
+#ifndef _WIN32
 		MakeHTMLfromWU(conn, wu_part_name, pair);
+#endif
 	}
 	sat_file.close();
 												   
@@ -216,7 +230,7 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 	std::stringstream MOLS_out_sstream;
 	std::cout << "wu_name_part " << wu_name_part << std::endl;
 	std::vector< std::vector<std::stringstream *> > result_vec;
-	std::string str = "SELECT id FROM result WHERE workunitid IN(SELECT id FROM workunit WHERE name LIKE '%" + wu_name_part + "%')";
+	std::string str = "SELECT id FROM result WHERE workunitid IN(SELECT id FROM workunit WHERE name LIKE '%" + wu_name_part + "_%')";
 	std::cout << str << std::endl;
 	
 	ProcessQuery(conn, str, result_vec);
@@ -240,12 +254,12 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 			resultid_vec.push_back(u_val);
 			delete result_vec[i][j];
 		}
-
+	
+	MOLS_out_sstream << "wu_name_part " << wu_name_part << std::endl;
+	MOLS_out_sstream << "result_vec.size() " << result_vec.size() << std::endl;
+	MOLS_out_sstream << "resultid_vec.size() " << resultid_vec.size() << std::endl;
 	for (std::vector<int>::iterator it = resultid_vec.begin(); it != resultid_vec.end(); it++) {
-		MOLS_out_sstream << "wu_name_part " << wu_name_part << std::endl;
-		MOLS_out_sstream << "result_vec.size() " << result_vec.size() << std::endl;
-		MOLS_out_sstream << "resultid_vec.size() " << resultid_vec.size() << std::endl;
-		MOLS_out_sstream << "workunitid " << *it << std::endl << std::endl;
+		MOLS_out_sstream << "resultid " << *it << std::endl << std::endl;
 		sstream << "SELECT userid, teamid, mod_time FROM result WHERE validate_state = 1 AND id=" << *it;
 		str = sstream.str();
 		sstream.clear(); sstream.str("");
@@ -343,6 +357,7 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 
 void ProcessQuery(MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec)
 {
+#ifndef _WIN32
 	// Дескриптор результирующей таблицы
 	MYSQL_RES *res;
 	// Дескриптор строки
@@ -379,6 +394,7 @@ void ProcessQuery(MYSQL *conn, std::string str, std::vector< std::vector<std::st
 
 	// Освобождаем память, занятую результирующей таблицей
 	mysql_free_result(res);
+#endif
 }
 
 int getdir(std::string dir, std::vector<std::string> &files)
