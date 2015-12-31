@@ -59,16 +59,16 @@ struct config_params_crypto {
 	std::string problem_type;
 	std::string settings_file;
 	std::string data_file;
-	unsigned long long cnf_variables;
+	long long cnf_variables;
 	long long cnf_clauses;
 	int N;
 	int rows_count;
 	int K;
-	unsigned long long skip_values;
-	unsigned long long problems_in_wu;
-	unsigned long long unsent_needed_wus;
-	unsigned long long total_wus;
-	unsigned long long created_wus;
+	long long skip_values;
+	long long problems_in_wu;
+	long long unsent_needed_wus;
+	long long total_wus;
+	long long created_wus;
 	int seconds_between_launches;
 	int credits_per_wu;
 };
@@ -77,9 +77,9 @@ static void print_help(const char *prog);
 bool do_work();
 void parse_config_file( std::string &cnf_head );
 static void create_wus( latin_square &ls, config_params_crypto &config_p, std::string cnf_head,
-					    unsigned long long wus_for_creation_count, bool &IsLastGenerating );
+					    long long wus_for_creation_count, bool &IsLastGenerating );
 #ifndef _WIN32
-void GetCountOfUnsentWUs( unsigned long long &unsent_count );
+void GetCountOfUnsentWUs( long long &unsent_count );
 bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec );
 #endif
 
@@ -281,10 +281,10 @@ bool do_work()
 
 	processed_wus     = 0;
 	all_processed_wus = 0;
-	unsigned long long unsent_count = 0;
+	long long unsent_count = 0;
 	config_params_crypto config_p;
 	std::string cnf_head;
-	unsigned long long wus_for_creation_count = 0;
+	long long wus_for_creation_count = 0;
 	latin_square ls;
 	
 	parse_config_file( config_p, cnf_head );
@@ -378,7 +378,7 @@ bool do_work()
 }
 
 void create_wus(latin_square &ls, config_params_crypto &config_p,
-				 std::string cnf_head, unsigned long long wus_for_creation_count, bool &IsLastGenerating )
+				 std::string cnf_head, long long wus_for_creation_count, bool &IsLastGenerating )
 {
 	std::ofstream temp_wu_file_name;
 	std::string cur_wu_input_file_name;
@@ -389,7 +389,7 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 	std::cout << "wus_for_creation_count " << wus_for_creation_count << std::endl;
 	bool IsAddingWUneeded;
 	bool IsFastExit = false;
-	unsigned long long new_created_wus = 0;
+	long long new_created_wus = 0;
 	std::string str, word1;
 	std::ifstream ifile;
 	std::vector<int> var_choose_order;
@@ -421,7 +421,7 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 		std::cout << "header_str_count " << header_str_count << std::endl;
 	}
 	
-	unsigned long long total_wu_data_count = 0;
+	long long total_wu_data_count = 0;
 	
 	if (isLS) {
 		std::cout << "Latin squares mode" << std::endl;
@@ -459,7 +459,7 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 	vector<int> ::iterator vec_it;
 	
 	if (isLS) {
-		for (unsigned long long wu_index = config_p.created_wus; wu_index < config_p.created_wus + wus_for_creation_count; wu_index++) {
+		for (long long wu_index = config_p.created_wus; wu_index < config_p.created_wus + wus_for_creation_count; wu_index++) {
 			if (IsFastExit)
 				break;
 			IsAddingWUneeded = false; // if no values will be added then WU not needed
@@ -526,9 +526,9 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 		}
 	}
 	else {
-		unsigned long long now_created = 0;
+		long long now_created = 0;
 		unsigned long long range1, range2;
-		for (unsigned long long wu_index = config_p.created_wus; wu_index < config_p.created_wus + wus_for_creation_count; wu_index++) {
+		for (long long wu_index = config_p.created_wus; wu_index < config_p.created_wus + wus_for_creation_count; wu_index++) {
 			if (IsFastExit)
 				break;
 			range1 = wu_index*config_p.problems_in_wu;
@@ -624,7 +624,7 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 }
 
 #ifndef _WIN32
-void GetCountOfUnsentWUs( unsigned long long &unsent_count )
+void GetCountOfUnsentWUs( long long &unsent_count )
 {
 	char *host = "localhost";
     char *db;
