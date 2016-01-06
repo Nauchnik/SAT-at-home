@@ -58,6 +58,7 @@ int main( int argc, char *argv[] )
 	std::stringstream sstream, final_sstream;
 	bool isCorrectUnusefulFile, isSATfile;
 	std::string sat_output_file_name = "sat_output";
+	std::string sat_result_base_file_name = "SAT_result_";
 	std::string sat_result_output_file_name;
 		
 	for ( unsigned i=0; i < file_names.size(); i++ ) {
@@ -65,7 +66,8 @@ int main( int argc, char *argv[] )
 		if ( ( file_names[i].find( "assimilator" ) != std::string::npos ) || 
 			 ( file_names[i].find( "output" ) != std::string::npos ) ||
 			 ( file_names[i].find( "out" ) != std::string::npos ) ||
-			 ( file_names[i].find( "MOLS" ) != std::string::npos )
+			 ( file_names[i].find( "MOLS" ) != std::string::npos ) ||
+			 ( file_names[i].find(sat_result_base_file_name) != std::string::npos )
 			 )
 			continue;
 		ifile.open(file_names[i].c_str());
@@ -79,7 +81,7 @@ int main( int argc, char *argv[] )
 			if (str.find(" SAT") != std::string::npos) {
 				isSATfile = true;
 				std::cout << "SAT found" << std::endl;
-				std::ofstream sat_out(sat_output_file_name.c_str(), std::ios_base::app);
+				std::ofstream sat_out(sat_output_file_name.c_str(), std::ios_base::out | std::ios_base::app);
 				sat_out << file_names[i] << " " << str << std::endl;
 				sat_out.close(); sat_out.clear();
 			}
@@ -95,10 +97,10 @@ int main( int argc, char *argv[] )
 			system(system_str.c_str());
 		}
 		if ( isSATfile ) {
-			sat_result_output_file_name = "SAT_result_" + file_names[i];
+			sat_result_output_file_name = sat_result_base_file_name + file_names[i];
 			std::ofstream ofile(sat_result_output_file_name.c_str());
 			ofile << sstream.rdbuf();
-			ofile.close();
+			ofile.close(); ofile.clear();
 		}
 		sstream.clear(); sstream.str("");
 	}
@@ -124,10 +126,10 @@ int main( int argc, char *argv[] )
 	MOLS pair;
 	// clean file
 	std::ofstream MOLS_out_file("MOLS_out", std::ios_base::out);
-	MOLS_out_file.close();
+	MOLS_out_file.close(); MOLS_out_file.clear();
 
 	std::ofstream mols_file("MOLS", std::ios_base::out);
-	mols_file.close();
+	mols_file.close(); mols_file.clear();
 	
 	std::string wu_part_name;
 	std::vector< std::vector<std::stringstream *> > result_vec;
@@ -141,8 +143,8 @@ int main( int argc, char *argv[] )
 		MakeHTMLfromWU(conn, wu_part_name, pair);
 #endif
 	}
-	sat_file.close();
-												   
+	sat_file.close(); sat_file.clear();
+													   
 	// delete file with SAT answer after reading it
 	system_str = "rm ";
 	system_str += sat_output_file_name;
@@ -230,7 +232,7 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 	std::stringstream MOLS_out_sstream;
 	std::cout << "wu_name_part " << wu_name_part << std::endl;
 	std::vector< std::vector<std::stringstream *> > result_vec;
-	std::string str = "SELECT id FROM result WHERE workunitid IN(SELECT id FROM workunit WHERE name LIKE '%" + wu_name_part + "_%')";
+	std::string str = "SELECT id FROM result WHERE workunitid IN(SELECT id FROM workunit WHERE name='" + wu_name_part + "')";
 	std::cout << str << std::endl;
 	
 	ProcessQuery(conn, str, result_vec);
@@ -267,6 +269,7 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 		ProcessQuery(conn, str, result_vec);
 		//std::cout << "workunitid " << wu_id_str << std::endl;
 		std::cout << "resultid " << *it << std::endl;
+		std::cout << "result_vec.size() " << result_vec.size() << std::endl;
 		for (unsigned i = 0; i < result_vec.size(); i++) {
 			*result_vec[i][0] >> u_val; // get userid
 			userid_vec.push_back(u_val);
