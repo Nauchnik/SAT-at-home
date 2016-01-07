@@ -31,6 +31,8 @@ void ProcessQuery(MYSQL *conn, std::string str, std::vector< std::vector<std::st
 void MakeHTMLfromWU(MYSQL *conn, std::string wu_id_str, MOLS pair_MOLS);
 #endif
 
+std::string sat_result_base_file_name = "SAT_result_";
+
 int main( int argc, char *argv[] )
 {
 #ifdef _DEBUG
@@ -64,7 +66,6 @@ int main( int argc, char *argv[] )
 	std::stringstream sstream, final_sstream;
 	bool isCorrectUnusefulFile, isSATfile;
 	std::string sat_output_file_name = "sat_output";
-	std::string sat_result_base_file_name = "SAT_result_";
 	std::string sat_result_output_file_name;
 		
 	for ( unsigned i=0; i < file_names.size(); i++ ) {
@@ -339,7 +340,8 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 	MOLS_out_sstream << "<td> diag10_2 </td>" << std::endl << "<td>\n" << "<FONT SIZE = -2>\n" 
 		             << pair_MOLS.HtmlstringView() << "</FONT>\n</td>\n</tr>";
 
-	std::ofstream unique_result_time_file(mod_time_vec[0].c_str());
+	std::string unique_result_time_file_name = sat_result_base_file_name + mod_time_vec[0];
+	std::ofstream unique_result_time_file(unique_result_time_file_name.c_str());
 	unique_result_time_file << MOLS_out_sstream.str();
 	unique_result_time_file.close();
 	unique_result_time_file.close();
