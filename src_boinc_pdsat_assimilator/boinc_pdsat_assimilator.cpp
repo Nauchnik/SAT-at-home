@@ -13,17 +13,23 @@
 #include <dirent.h>
 #endif
 
+/*
 #ifdef _WIN32
 #include <my_global.h> // Include this file first to avoid problems
 #endif
+*/
 
+#ifndef _WIN32
 #include <mysql.h>
-				
+#endif	
+
 void getCurrentMOLS(std::string &str, MOLS &pair);
 void touchBoincResultFiles();
+int getdir(std::string dir, std::vector<std::string> &files);
+#ifndef _WIN32
 void ProcessQuery(MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec);
 void MakeHTMLfromWU(MYSQL *conn, std::string wu_id_str, MOLS pair_MOLS);
-int getdir(std::string dir, std::vector<std::string> &files);
+#endif
 
 int main( int argc, char *argv[] )
 {
@@ -124,10 +130,6 @@ int main( int argc, char *argv[] )
 	//   cerr << "Error: can't set character set\n";
 
 	MOLS pair;
-	// clean file
-	std::ofstream MOLS_out_file("MOLS_out", std::ios_base::out);
-	MOLS_out_file.close(); MOLS_out_file.clear();
-
 	std::ofstream mols_file("MOLS", std::ios_base::out);
 	mols_file.close(); mols_file.clear();
 	
@@ -146,12 +148,12 @@ int main( int argc, char *argv[] )
 	sat_file.close(); sat_file.clear();
 													   
 	// delete file with SAT answer after reading it
-	system_str = "rm ";
+	/*system_str = "rm ";
 	system_str += sat_output_file_name;
 	std::cout << "system_str " << system_str << std::endl;
-	system(system_str.c_str());
+	system(system_str.c_str());*/
 	
-	std::cout << "*** done" << std::endl;
+	std::cout << std::endl << "*** done" << std::endl;
 }
 
 void getCurrentMOLS( std::string &str, MOLS &pair)
@@ -227,6 +229,7 @@ void touchBoincResultFiles()
 	error_file.close();
 }
 
+#ifndef _WIN32
 void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 {
 	std::stringstream MOLS_out_sstream;
@@ -254,7 +257,6 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 		for (unsigned j = 0; j < result_vec[i].size(); j++) {
 			*result_vec[i][j] >> u_val;
 			resultid_vec.push_back(u_val);
-			delete result_vec[i][j];
 		}
 	
 	MOLS_out_sstream << "wu_name_part " << wu_name_part << std::endl;
@@ -267,7 +269,6 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 		sstream.clear(); sstream.str("");
 		std::cout << str << std::endl;
 		ProcessQuery(conn, str, result_vec);
-		//std::cout << "workunitid " << wu_id_str << std::endl;
 		std::cout << "resultid " << *it << std::endl;
 		std::cout << "result_vec.size() " << result_vec.size() << std::endl;
 		for (unsigned i = 0; i < result_vec.size(); i++) {
@@ -282,15 +283,10 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 			std::cout << "mod_time " << str << std::endl;
 			std::cout << std::endl;
 			mod_time_vec.push_back(str);
-			for (unsigned j = 0; j < result_vec[i].size(); j++)
-				delete result_vec[i][j];
 		}
-		result_vec.clear();
 	}
 	
-	result_vec.clear();
-
-	std::cout << "teamid_vec:" << std::endl;
+	std::cout << "teamid_vec :" << std::endl;
 	for (unsigned i = 0; i < teamid_vec.size(); i++)
 		std::cout << teamid_vec[i] << std::endl;
 
@@ -306,7 +302,6 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 			str = (*result_vec[i][0]).str();
 			std::cout << str << std::endl;
 			username_vec.push_back(str);
-			delete result_vec[i][0];
 		}
 		result_vec.clear();
 	}
@@ -326,12 +321,8 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 			str = (*result_vec[i][0]).str();
 			std::cout << str << std::endl;
 			teamname_vec.push_back(str);
-			delete result_vec[i][0];
 		}
-		result_vec.clear();
 	}
-
-	std::ofstream MOLS_out_file("MOLS_out", std::ios_base::app);
 	
 	MOLS_out_sstream << "<tr>" << std::endl << "<td> 1 </td>" << 
 		                "<td> <b>" << mod_time_vec[0] << " UTC </b> </td>" << std::endl;
@@ -347,7 +338,6 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 	MOLS_out_sstream << " </td>" << std::endl;
 	MOLS_out_sstream << "<td> diag10_2 </td>" << std::endl << "<td>\n" << "<FONT SIZE = -2>\n" 
 		             << pair_MOLS.HtmlstringView() << "</FONT>\n</td>\n</tr>";
-	MOLS_out_file << MOLS_out_sstream.str();
 
 	std::ofstream unique_result_time_file(mod_time_vec[0].c_str());
 	unique_result_time_file << MOLS_out_sstream.str();
@@ -360,13 +350,18 @@ void MakeHTMLfromWU(MYSQL *conn, std::string wu_name_part, MOLS pair_MOLS )
 
 void ProcessQuery(MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec)
 {
-#ifndef _WIN32
 	// Дескриптор результирующей таблицы
 	MYSQL_RES *res;
 	// Дескриптор строки
 	MYSQL_ROW row;
 	int num_fields;
-
+	
+	// clear result array
+	for (unsigned i = 0; i < result_vec.size(); i++)
+		for (unsigned j = 0; j < result_vec[i].size(); j++)
+			delete result_vec[i][j];
+	result_vec.clear();
+	
 	if (mysql_query(conn, str.c_str()) != 0)
 		std::cerr << "Error: can't execute SQL-query\n";
 
@@ -397,8 +392,8 @@ void ProcessQuery(MYSQL *conn, std::string str, std::vector< std::vector<std::st
 
 	// Освобождаем память, занятую результирующей таблицей
 	mysql_free_result(res);
-#endif
 }
+#endif
 
 int getdir(std::string dir, std::vector<std::string> &files)
 {
