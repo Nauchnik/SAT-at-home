@@ -64,6 +64,7 @@ struct config_params_crypto {
 	int N;
 	int rows_count;
 	int K;
+	int diag_elements;
 	long long skip_values;
 	long long problems_in_wu;
 	long long unsent_needed_wus;
@@ -85,6 +86,14 @@ bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::s
 
 int main( int argc, char *argv[] )
 {
+#ifdef _DEBUG
+	latin_square ls;
+	ls.N = 10;
+	ls.diag_elements = 9;
+	ls.makeDiagonalElementsValues();
+	return 0;
+#endif
+	
 	double start_time = cpu_time();
 	std::string str;
 	if ( argc < 3 ) {
@@ -177,6 +186,12 @@ void parse_config_file( config_params_crypto &config_p, std::string &cnf_head )
 	sstream << input_str;
 	sstream >> str1 >> config_p.K;
 	sstream.str(""); sstream.clear();
+	// diagonal elements for decomposition
+	getline(master_config_file, input_str);
+	std::cout << "input_str " << input_str << std::endl;
+	sstream << input_str;
+	sstream >> str1 >> config_p.diag_elements;
+	sstream.str(""); sstream.clear();
 	// skip_values
 	getline(master_config_file, input_str);
 	std::cout << "input_str " << input_str << std::endl;
@@ -262,6 +277,7 @@ void parse_config_file( config_params_crypto &config_p, std::string &cnf_head )
 	std::cout << "N "				  << config_p.N << std::endl;
 	std::cout << "rows_count "        << config_p.rows_count << std::endl;
 	std::cout << "K "                 << config_p.K << std::endl;
+	std::cout << "diag_elements "     << config_p.diag_elements << std::endl;
 	std::cout << "skip_values "       << config_p.skip_values << std::endl;
 	std::cout << "problems_in_wu "    << config_p.problems_in_wu << std::endl;
 	std::cout << "unsent_needed_wus " << config_p.unsent_needed_wus << std::endl;
@@ -294,9 +310,10 @@ bool do_work()
 		ls.N = config_p.N;
 		ls.K = config_p.K;
 		ls.rows_count = config_p.rows_count;
+		ls.diag_elements = config_p.diag_elements;
 		ls.skip_values = config_p.skip_values;
 	}
-
+	
 	std::ifstream ifile;
 	ifile.open( config_p.data_file.c_str(), std::ios_base :: in | std::ios_base :: binary );
 	if ( !ifile.is_open() ) {

@@ -6,6 +6,7 @@ cnf_clauses 434450
 N 10
 rows_count 2
 K 9
+diag_elements 9
 skip_values 0
 problems_in_wu 30
 unsent_needed_wus 1000
