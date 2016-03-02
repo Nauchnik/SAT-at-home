@@ -90,6 +90,7 @@ int main( int argc, char *argv[] )
 	latin_square ls;
 	ls.N = 10;
 	ls.diag_elements = 9;
+	ls.max_values_len = 29970;
 	ls.makeDiagonalElementsValues();
 	return 0;
 #endif
@@ -318,7 +319,7 @@ bool do_work()
 	ifile.open( config_p.data_file.c_str(), std::ios_base :: in | std::ios_base :: binary );
 	if ( !ifile.is_open() ) {
 		isRangeMode = true;
-		std::cout << "isRangeMode " << isRangeMode << std::endl;
+		//std::cout << "isRangeMode " << isRangeMode << std::endl;
 	}
 	else
 		ifile.close();
@@ -395,7 +396,7 @@ bool do_work()
 }
 
 void create_wus(latin_square &ls, config_params_crypto &config_p,
-				 std::string cnf_head, long long wus_for_creation_count, bool &IsLastGenerating )
+				std::string cnf_head, long long wus_for_creation_count, bool &IsLastGenerating )
 {
 	std::ofstream temp_wu_file_name;
 	std::string cur_wu_input_file_name;
@@ -446,9 +447,16 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 		std::cout << "wus_for_creation_count " << wus_for_creation_count << endl;
 		std::cout << "ls.max_values_len " << ls.max_values_len << endl;
 		ls.verbosity = 0;
-		ls.MakeLatinValues();
+		if ( ls.diag_elements == 0 )
+			ls.MakeLatinValues();
+		else 
+			ls.makeDiagonalElementsValues();
 		std::cout << "MakeLatinValue() done" << std::endl;
 		std::cout << "ls.positive_literals.size() " << ls.positive_literals.size() << std::endl;
+		if (!ls.positive_literals.size()) {
+			std::cout << "Exit due to empty ls.positive_literals" << std::endl;
+			return;
+		}
 	}
 	else {
 		std::cout << "Cryptanalysys mode" << std::endl;
@@ -524,20 +532,15 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 			temp_wu_file_name.clear();
 			
 			system_str = "cp tmp_wu_file `dir_hier_path " + cur_wu_input_file_name + "`";
-			std::cout << "before system command : " << system_str << std::endl; 
+			//std::cout << "before system command : " << system_str << std::endl; 
 			system(system_str.c_str());
-#ifndef _WIN32
-			sleep(1); // wait
-#endif
+			
 			//std::cout << "after system command" << std::endl;
 			system_str = "create_work -appname pdsat -wu_name " + wu_name +
 				" -wu_template templates/workunit_template_ls_diag10_2_10N2R9K.xml" +
 				" -result_template templates/result_template_ls_diag10_2_10N2R9K.xml " + cur_wu_input_file_name;
 			std::cout << "before system command : " << system_str << std::endl;
 			system(system_str.c_str());
-#ifndef _WIN32
-			sleep(1); // wait
-#endif
 			
 			new_created_wus++;
 		}
@@ -626,6 +629,7 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 	cur_config_sstream << "N " << config_p.N << std::endl;
 	cur_config_sstream << "rows_count " << config_p.rows_count << std::endl;
 	cur_config_sstream << "K " << config_p.K << std::endl;
+	cur_config_sstream << "diag_elements " << config_p.diag_elements << std::endl;
 	cur_config_sstream << "skip_values " << config_p.skip_values << std::endl;
 	cur_config_sstream << "problems_in_wu " << config_p.problems_in_wu << std::endl;
 	cur_config_sstream << "unsent_needed_wus " << config_p.unsent_needed_wus << std::endl;
