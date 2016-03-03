@@ -86,11 +86,11 @@ bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::s
 
 int main( int argc, char *argv[] )
 {
-#ifdef _DEBUG
+#ifdef _WIN32
 	latin_square ls;
 	ls.N = 10;
-	ls.diag_elements = 9;
-	ls.max_values_len = 29970;
+	ls.diag_elements = 18;
+	ls.max_values_len = 100000000;
 	ls.makeDiagonalElementsValues();
 	return 0;
 #endif
