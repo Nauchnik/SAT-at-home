@@ -90,7 +90,7 @@ int main( int argc, char *argv[] )
 	latin_square ls;
 	ls.N = 10;
 	ls.diag_elements = 18;
-	ls.max_values_len = 100000000;
+	ls.max_values_len = 100;
 	ls.makeDiagonalElementsValues();
 	return 0;
 #endif
