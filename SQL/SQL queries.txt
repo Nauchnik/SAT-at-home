@@ -33,3 +33,12 @@ DELETE FROM profile WHERE userid NOT IN(SELECT id FROM user)
 UPDATE user SET has_profile=1 WHERE id IN(SELECT userid FROM profile) 
 
 nohup /var/lib/boinc/pdsat/project/bin/pdsat_work_generator /var/lib/boinc/pdsat/project/bin/work_generator_config.conf /var/lib/boinc/pdsat/project/bin/pass &> /var/lib/boinc/pdsat/project/bin/work_generator_out &
+
+добавить кредиты хосту с некоторых wu
+update host join(select hostid, sum(granted_credit) as granted_credit from result where granted_credit=20 and claimed_credit=20 and cpu_time>0 group by hostid) as host_result on host_result.hostid=host.id set total_credit=total_credit+host_result.granted_credit;
+
+// обновить кредиты пользователей как сумму кредитов всех хостов
+update user join(select userid, sum(total_credit) as total_credit from host group by userid) as hosts_group on hosts_group.userid=user.id set user.total_credit=hosts_group.total_credit;
+
+// обновить кредиты команд как сумму кредитов всех пользователей
+update team join(select teamid, sum(total_credit) as total_credit from user group by teamid) as users_group on users_group.teamid=team.id set team.total_credit=users_group.total_credit;
