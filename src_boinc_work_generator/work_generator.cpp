@@ -19,6 +19,8 @@
 #include <ctime>
 #include "latin_squares.h"
 
+using namespace std;
+
 const long long MIN_WUS_FOR_CREATION = 100;
 const long long MAX_WUS_FOR_CREATION = 2000;
 
@@ -28,9 +30,9 @@ static long long processed_wus;
 static long long unsent_wus;
 static long long running_wus;
 
-std::string pass_file_name;
-std::string master_config_file_name;
-std::string prev_path;
+string pass_file_name;
+string master_config_file_name;
+string prev_path;
 
 unsigned long long assumptions_count = 0;
 bool isRangeMode = false;
@@ -50,15 +52,15 @@ void shl64( unsigned long long int &val_for_left_shift, unsigned int bit_count )
 	else if ( bit_count < 31 )
 		val_for_left_shift =  ( unsigned long long int )( 1 << bit_count );
 	else
-		std::cout << "\n bit_count " <<  bit_count << " is too large ";
+		cout << "\n bit_count " <<  bit_count << " is too large ";
 }
 
 // Command line options
 
 struct config_params_crypto {
-	std::string problem_type;
-	std::string settings_file;
-	std::string data_file;
+	string problem_type;
+	string settings_file;
+	string data_file;
 	long long cnf_variables;
 	long long cnf_clauses;
 	int N;
@@ -76,12 +78,12 @@ struct config_params_crypto {
 
 static void print_help(const char *prog);
 bool do_work();
-void parse_config_file( std::string &cnf_head );
-static void create_wus( latin_square &ls, config_params_crypto &config_p, std::string cnf_head,
+void parse_config_file( string &cnf_head );
+static void create_wus( latin_square &ls, config_params_crypto &config_p, string cnf_head,
 					    long long wus_for_creation_count, bool &IsLastGenerating );
 #ifndef _WIN32
 void GetCountOfUnsentWUs( long long &unsent_count );
-bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec );
+bool ProcessQuery( MYSQL *conn, string str, vector< vector<stringstream *> > &result_vec );
 #endif
 
 int main( int argc, char *argv[] )
@@ -96,165 +98,165 @@ int main( int argc, char *argv[] )
 #endif
 	
 	double start_time = cpu_time();
-	std::string str;
+	string str;
 	if ( argc < 3 ) {
-		std::cerr << "Usage : program master_config_file_name pass_file_name" << std::endl;
+		cerr << "Usage : program master_config_file_name pass_file_name" << endl;
 		return 1;
 	}
 	// find full path to file
 	master_config_file_name = argv[1];
-	std::cout << "master_config_file_name " << master_config_file_name << std::endl;
+	cout << "master_config_file_name " << master_config_file_name << endl;
 	// read password for database
 	pass_file_name = argv[2];
-	std::cout << "pass_file_name " << pass_file_name << std::endl;
+	cout << "pass_file_name " << pass_file_name << endl;
 	int pos = -1, last_pos = 0;
 	for(;;){
 		pos = master_config_file_name.find("/", pos+1);
-		if ( pos != std::string::npos )
+		if ( pos != string::npos )
 			last_pos = pos;
 		else
 			break;
 	}
 	prev_path = master_config_file_name.substr(0, last_pos+1);
-	std::cout << "prev_path " << prev_path << std::endl;
-	std::cout << "new master_config_file_name " << master_config_file_name << std::endl;
+	cout << "prev_path " << prev_path << endl;
+	cout << "new master_config_file_name " << master_config_file_name << endl;
 	
 	do_work();
-	std::cout << "total time " << cpu_time() - start_time << std::endl;
+	cout << "total time " << cpu_time() - start_time << endl;
 	
 	return 0;
 }
 
-void parse_config_file( config_params_crypto &config_p, std::string &cnf_head )
+void parse_config_file( config_params_crypto &config_p, string &cnf_head )
 {
-	std::fstream master_config_file;
-	std::string input_str, str1, str2, str3;
-	std::stringstream sstream;
+	fstream master_config_file;
+	string input_str, str1, str2, str3;
+	stringstream sstream;
 	master_config_file.open( master_config_file_name.c_str() );
 	
-	std::cout << "In parse_config_file() master_config_file_name " << master_config_file_name << std::endl;
+	cout << "In parse_config_file() master_config_file_name " << master_config_file_name << endl;
 	if ( !master_config_file.is_open() ) {
-		std::cerr << "file " << master_config_file_name << " doesn't exist" << std::endl;
+		cerr << "file " << master_config_file_name << " doesn't exist" << endl;
 		exit(1);
 	}
-	std::cout << std::endl << "input file opened" << std::endl;
+	cout << endl << "input file opened" << endl;
 	
 	// problem_type
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.problem_type;
 	sstream.str(""); sstream.clear();
 	// settings_file
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.settings_file;
 	sstream.str(""); sstream.clear();
 	// data_file
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.data_file;
 	sstream.str(""); sstream.clear();
 	// cnf_variables
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.cnf_variables;
 	sstream.str(""); sstream.clear();
 	// cnf_clauses
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.cnf_clauses;
 	sstream.str(""); sstream.clear();
 	// N for LS
 	getline(master_config_file, input_str);
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.N;
 	sstream.str(""); sstream.clear();
 	// rows_count for LS
 	getline(master_config_file, input_str);
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.rows_count;
 	sstream.str(""); sstream.clear();
 	// K for LS
 	getline(master_config_file, input_str);
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.K;
 	sstream.str(""); sstream.clear();
 	// diagonal elements for decomposition
 	getline(master_config_file, input_str);
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.diag_elements;
 	sstream.str(""); sstream.clear();
 	// skip_values
 	getline(master_config_file, input_str);
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
 	sstream >> str1 >> config_p.skip_values;
 	sstream.str(""); sstream.clear();
 	// problems_in_wu
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
-	if ( input_str.find( "problems_in_wu" ) == std::string::npos ) {
-		std::cerr << "string " << input_str << " doesn't include 'problems_in_wu = '" << std::endl; 
+	if ( input_str.find( "problems_in_wu" ) == string::npos ) {
+		cerr << "string " << input_str << " doesn't include 'problems_in_wu = '" << endl; 
 		exit(1);
 	}
 	sstream >> str1 >> config_p.problems_in_wu;
 	sstream.str(""); sstream.clear();
 	// unsent_needed_wus
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
-	if ( input_str.find( "unsent_needed_wus" ) == std::string::npos ) {
-		std::cerr << "string " << input_str << " doesn't include 'unsent_needed_wus = '" << std::endl; 
+	if ( input_str.find( "unsent_needed_wus" ) == string::npos ) {
+		cerr << "string " << input_str << " doesn't include 'unsent_needed_wus = '" << endl; 
 		exit(1);
 	}
 	sstream >> str1 >> config_p.unsent_needed_wus;
 	sstream.str(""); sstream.clear();
 	// read total_wus
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
-	if ( input_str.find( "total_wus" ) == std::string::npos ) {
-		std::cerr << "string " << input_str << " doesn't include 'total_wus = '" << std::endl; 
+	if ( input_str.find( "total_wus" ) == string::npos ) {
+		cerr << "string " << input_str << " doesn't include 'total_wus = '" << endl; 
 		exit(1);
 	}
 	sstream >> str1 >> config_p.total_wus;
 	sstream.str(""); sstream.clear();
 	// read seconds_between_launches
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;     
-	if ( input_str.find( "seconds_between_launches" ) == std::string::npos ) {
-		std::cerr << "string " << input_str << " doesn't include 'seconds_between_launches = '" << std::endl; 
+	if ( input_str.find( "seconds_between_launches" ) == string::npos ) {
+		cerr << "string " << input_str << " doesn't include 'seconds_between_launches = '" << endl; 
 		exit(1);
 	}
 	sstream >> str1 >> config_p.seconds_between_launches;
 	sstream.str(""); sstream.clear();
 	// read credits_per_wu
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
-	if ( input_str.find( "credits_per_wu" ) == std::string::npos ) {
-		std::cerr << "string " << input_str << " doesn't include 'credits_per_wu = '" << std::endl; 
+	if ( input_str.find( "credits_per_wu" ) == string::npos ) {
+		cerr << "string " << input_str << " doesn't include 'credits_per_wu = '" << endl; 
 		exit(1);
 	}
 	sstream >> str1 >> config_p.credits_per_wu;
 	sstream.str(""); sstream.clear();
 	// created_wus
 	getline( master_config_file, input_str );
-	std::cout << "input_str " << input_str << std::endl;
+	cout << "input_str " << input_str << endl;
 	sstream << input_str;
-	if ( input_str.find( "created_wus" ) == std::string::npos ) {
-		std::cerr << "string " << input_str << " doesn't include 'created_wus = '" << std::endl; 
+	if ( input_str.find( "created_wus" ) == string::npos ) {
+		cerr << "string " << input_str << " doesn't include 'created_wus = '" << endl; 
 		exit(1);
 	}
 	sstream >> str1 >> config_p.created_wus;
@@ -270,24 +272,24 @@ void parse_config_file( config_params_crypto &config_p, std::string &cnf_head )
 	if ( config_p.data_file != "no" )
 		config_p.data_file     = prev_path + config_p.data_file;
 	
-	std::cout << "problem_type "      << config_p.problem_type << std::endl;
-	std::cout << "settings_file "     << config_p.settings_file << std::endl;
-	std::cout << "data_file "         << config_p.data_file << std::endl;
-	std::cout << "cnf_variables "     << config_p.cnf_variables << std::endl;
-	std::cout << "cnf_clauses "       << config_p.cnf_clauses << std::endl;
-	std::cout << "N "				  << config_p.N << std::endl;
-	std::cout << "rows_count "        << config_p.rows_count << std::endl;
-	std::cout << "K "                 << config_p.K << std::endl;
-	std::cout << "diag_elements "     << config_p.diag_elements << std::endl;
-	std::cout << "skip_values "       << config_p.skip_values << std::endl;
-	std::cout << "problems_in_wu "    << config_p.problems_in_wu << std::endl;
-	std::cout << "unsent_needed_wus " << config_p.unsent_needed_wus << std::endl;
-	std::cout << "total_wus "         << config_p.total_wus << std::endl;
-	std::cout << "seconds_between_launches " << config_p.seconds_between_launches << std::endl;
-	std::cout << "credits_per_wu "    << config_p.credits_per_wu << std::endl;
-	std::cout << "created_wus "       << config_p.created_wus << std::endl;
-	std::cout << "*** cnf_head "      << cnf_head << std::endl;
-	std::cout << std::endl;
+	cout << "problem_type "      << config_p.problem_type << endl;
+	cout << "settings_file "     << config_p.settings_file << endl;
+	cout << "data_file "         << config_p.data_file << endl;
+	cout << "cnf_variables "     << config_p.cnf_variables << endl;
+	cout << "cnf_clauses "       << config_p.cnf_clauses << endl;
+	cout << "N "				  << config_p.N << endl;
+	cout << "rows_count "        << config_p.rows_count << endl;
+	cout << "K "                 << config_p.K << endl;
+	cout << "diag_elements "     << config_p.diag_elements << endl;
+	cout << "skip_values "       << config_p.skip_values << endl;
+	cout << "problems_in_wu "    << config_p.problems_in_wu << endl;
+	cout << "unsent_needed_wus " << config_p.unsent_needed_wus << endl;
+	cout << "total_wus "         << config_p.total_wus << endl;
+	cout << "seconds_between_launches " << config_p.seconds_between_launches << endl;
+	cout << "credits_per_wu "    << config_p.credits_per_wu << endl;
+	cout << "created_wus "       << config_p.created_wus << endl;
+	cout << "*** cnf_head "      << cnf_head << endl;
+	cout << endl;
 	
 	master_config_file.close();
 }
@@ -300,12 +302,12 @@ bool do_work()
 	all_processed_wus = 0;
 	long long unsent_count = 0;
 	config_params_crypto config_p;
-	std::string cnf_head;
+	string cnf_head;
 	long long wus_for_creation_count = 0;
 	latin_square ls;
 	
 	parse_config_file( config_p, cnf_head );
-	if (config_p.problem_type.find("ls_diag") != std::string::npos) {
+	if (config_p.problem_type.find("ls_diag") != string::npos) {
 		isLS = true;
 		ls.problem_type = "diag";
 		ls.N = config_p.N;
@@ -315,11 +317,11 @@ bool do_work()
 		ls.skip_values = config_p.skip_values;
 	}
 	
-	std::ifstream ifile;
-	ifile.open( config_p.data_file.c_str(), std::ios_base :: in | std::ios_base :: binary );
+	ifstream ifile;
+	ifile.open( config_p.data_file.c_str(), ios_base :: in | ios_base :: binary );
 	if ( !ifile.is_open() ) {
 		isRangeMode = true;
-		//std::cout << "isRangeMode " << isRangeMode << std::endl;
+		//cout << "isRangeMode " << isRangeMode << endl;
 	}
 	else
 		ifile.close();
@@ -330,20 +332,20 @@ bool do_work()
 	for (;;) {
 		if ( IsLastGenerating ) {
 			if ( config_p.created_wus == config_p.total_wus ) {
-				std::cout << "config_p.created_wus == config_p.total_wus" << std::endl;
-				std::cout << config_p.created_wus << " == " << config_p.total_wus << std::endl;
+				cout << "config_p.created_wus == config_p.total_wus" << endl;
+				cout << config_p.created_wus << " == " << config_p.total_wus << endl;
 			}
-			std::cout << "IsLastGenerating " << IsLastGenerating << std::endl;
-			std::cout << "generation done" << std::endl;
+			cout << "IsLastGenerating " << IsLastGenerating << endl;
+			cout << "generation done" << endl;
 			break;
 		}
 #ifndef _WIN32
 		GetCountOfUnsentWUs( unsent_count );
 #endif
-		std::cout << "unsent_count " << unsent_count << std::endl;
+		cout << "unsent_count " << unsent_count << endl;
 			
 		if ( unsent_count < 0 ) {
-			std::cout << "SQL error. unsent_count < 0. Waiting 60 seconds and try again" << std::endl;
+			cout << "SQL error. unsent_count < 0. Waiting 60 seconds and try again" << endl;
 #ifndef _WIN32
 			sleep( 60 );
 #endif
@@ -355,15 +357,15 @@ bool do_work()
 		if ( wus_for_creation_count + config_p.created_wus >= config_p.total_wus ) {
 			wus_for_creation_count = config_p.total_wus - config_p.created_wus; // create last several task
 			IsLastGenerating = true;
-			std::cout << "IsLastGenerating " << IsLastGenerating << std::endl;
+			cout << "IsLastGenerating " << IsLastGenerating << endl;
 		}
 
-		std::cout << "wus_for_creation_count " << wus_for_creation_count << std::endl;
+		cout << "wus_for_creation_count " << wus_for_creation_count << endl;
 
 		if ( wus_for_creation_count > MAX_WUS_FOR_CREATION ) {
-			std::cout << "wus_for_creation_count > MAX_WUS_FOR_CREATION" << std::endl;
+			cout << "wus_for_creation_count > MAX_WUS_FOR_CREATION" << endl;
 			wus_for_creation_count = MAX_WUS_FOR_CREATION;
-			std::cout << "changed to " << MAX_WUS_FOR_CREATION << std::endl;
+			cout << "changed to " << MAX_WUS_FOR_CREATION << endl;
 		}
 
 		if ( ( wus_for_creation_count >= MIN_WUS_FOR_CREATION ) || ( IsLastGenerating ) ) {
@@ -372,22 +374,22 @@ bool do_work()
 			create_wus(ls, config_p, cnf_head, wus_for_creation_count, IsLastGenerating);
 		}
 		else {
-			std::cout << "wus_for_creation_count < MIN_WUS_FOR_CREATION" << std::endl;
-			std::cout << wus_for_creation_count << " < " << MIN_WUS_FOR_CREATION << std::endl;
+			cout << "wus_for_creation_count < MIN_WUS_FOR_CREATION" << endl;
+			cout << wus_for_creation_count << " < " << MIN_WUS_FOR_CREATION << endl;
 			if ( old_wus_for_creation_count != wus_for_creation_count )
-				std::cout << "wus_for_creation_count " << wus_for_creation_count << std::endl;
+				cout << "wus_for_creation_count " << wus_for_creation_count << endl;
 			old_wus_for_creation_count = wus_for_creation_count;
 		}
 		
 		if ( !IsLastGenerating ) {
 #ifndef _WIN32
-			std::cout << "Waiting " << config_p.seconds_between_launches << " seconds" << std::endl;
+			cout << "Waiting " << config_p.seconds_between_launches << " seconds" << endl;
 			sleep( config_p.seconds_between_launches ); // wait
 #endif
 		}
 	}
 	
-	std::cout << "wus_for_creation_count " << wus_for_creation_count << std::endl;
+	cout << "wus_for_creation_count " << wus_for_creation_count << endl;
 	
 	//double total_time = cpuTime() - start_time;
 	//cout << "total time " << total_time << endl;
@@ -396,30 +398,30 @@ bool do_work()
 }
 
 void create_wus(latin_square &ls, config_params_crypto &config_p,
-				std::string cnf_head, long long wus_for_creation_count, bool &IsLastGenerating )
+				string cnf_head, long long wus_for_creation_count, bool &IsLastGenerating )
 {
-	std::ofstream temp_wu_file_name;
-	std::string cur_wu_input_file_name;
-	std::stringstream sstream, data_sstream, header_sstream;
+	ofstream temp_wu_file_name;
+	string cur_wu_input_file_name;
+	stringstream sstream, data_sstream, header_sstream;
 	
-	std::cout << "Start create_wus()" << std::endl;
-	std::cout << "cnf_head " << cnf_head << std::endl;
-	std::cout << "wus_for_creation_count " << wus_for_creation_count << std::endl;
+	cout << "Start create_wus()" << endl;
+	cout << "cnf_head " << cnf_head << endl;
+	cout << "wus_for_creation_count " << wus_for_creation_count << endl;
 	bool IsAddingWUneeded;
 	bool IsFastExit = false;
 	long long new_created_wus = 0;
-	std::string str, word1;
-	std::ifstream ifile;
-	std::vector<int> var_choose_order;
+	string str, word1;
+	ifstream ifile;
+	vector<int> var_choose_order;
 	
 	if (config_p.settings_file != "no") {
 		// read header data once - it's common for every wu
 		ifile.open(config_p.settings_file.c_str()); // write common head to every wu
 		if (!ifile.is_open()) {
-			std::cerr << "!ifile.is_open() " << config_p.settings_file << std::endl;
+			cerr << "!ifile.is_open() " << config_p.settings_file << endl;
 			exit(1);
 		}
-		std::cout << "file " << config_p.settings_file << " opened" << std::endl;
+		cout << "file " << config_p.settings_file << " opened" << endl;
 		//cout << "header:" << endl;
 		int header_str_count = 0;
 		while (getline(ifile, str)) {
@@ -431,56 +433,56 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 					var_choose_order.push_back(val);
 			}
 			sstream.clear(); sstream.str("");
-			header_sstream << str << std::endl;
+			header_sstream << str << endl;
 			header_str_count++;
 			//cout << str << endl;
 		}
 		ifile.close();
-		std::cout << "header_str_count " << header_str_count << std::endl;
+		cout << "header_str_count " << header_str_count << endl;
 	}
 	
 	long long total_wu_data_count = 0;
 	
 	if (isLS) {
-		std::cout << "Latin squares mode" << std::endl;
+		cout << "Latin squares mode" << endl;
 		ls.max_values_len = wus_for_creation_count * config_p.problems_in_wu;
-		std::cout << "wus_for_creation_count " << wus_for_creation_count << endl;
-		std::cout << "ls.max_values_len " << ls.max_values_len << endl;
+		cout << "wus_for_creation_count " << wus_for_creation_count << endl;
+		cout << "ls.max_values_len " << ls.max_values_len << endl;
 		ls.verbosity = 0;
 		if ( ls.diag_elements == 0 )
 			ls.MakeLatinValues();
 		else 
 			ls.makeDiagonalElementsValues();
-		std::cout << "MakeLatinValue() done" << std::endl;
-		std::cout << "ls.positive_literals.size() " << ls.positive_literals.size() << std::endl;
+		cout << "MakeLatinValue() done" << endl;
+		cout << "ls.positive_literals.size() " << ls.positive_literals.size() << endl;
 		if (!ls.positive_literals.size()) {
-			std::cout << "Exit due to empty ls.positive_literals" << std::endl;
+			cout << "Exit due to empty ls.positive_literals" << endl;
 			return;
 		}
 	}
 	else {
-		std::cout << "Cryptanalysys mode" << std::endl;
+		cout << "Cryptanalysys mode" << endl;
 		if (isRangeMode) {
-			std::cout << "isRangeMode" << std::endl;
+			cout << "isRangeMode" << endl;
 			shl64(assumptions_count, var_choose_order.size());
-			std::cout << "var_choose_order.size() " << var_choose_order.size() << std::endl;
-			std::cout << "assumptions_count " << assumptions_count << std::endl;
+			cout << "var_choose_order.size() " << var_choose_order.size() << endl;
+			cout << "assumptions_count " << assumptions_count << endl;
 		}
 		else {
-			std::cerr << "isRangeMode " << isRangeMode << std::endl;
+			cerr << "isRangeMode " << isRangeMode << endl;
 			exit(1);
 		}
 		long long total_wu_data_count = (long long)ceil(double(assumptions_count) / double(config_p.problems_in_wu));
 	}
 	
-	std::cout << "total_wu_data_count " << total_wu_data_count << std::endl;
+	cout << "total_wu_data_count " << total_wu_data_count << endl;
 	if ( (total_wu_data_count > config_p.total_wus) || (total_wu_data_count == 0) )
 		total_wu_data_count = config_p.total_wus;
-	std::cout << "total_wu_data_count changed to " << total_wu_data_count << std::endl;
-	std::cout << "created_wus " << config_p.created_wus << std::endl;
-	std::cout << "before creating wus" << std::endl;
+	cout << "total_wu_data_count changed to " << total_wu_data_count << endl;
+	cout << "created_wus " << config_p.created_wus << endl;
+	cout << "before creating wus" << endl;
 	unsigned values_index = 0;
-	std::string system_str, wu_name;
+	string system_str, wu_name;
 	vector<int> ::iterator vec_it;
 	
 	if (isLS) {
@@ -519,9 +521,9 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 			cur_wu_input_file_name = "input_" + wu_name;
 			sstream.str(""); sstream.clear();
 
-			temp_wu_file_name.open("tmp_wu_file", std::ios_base::out);
+			temp_wu_file_name.open("tmp_wu_file", ios_base::out);
 			if (!temp_wu_file_name.is_open()) {
-				std::cerr << "Failed to create wu-input.txt" << std::endl;
+				cerr << "Failed to create wu-input.txt" << endl;
 				exit(1);
 			}
 
@@ -532,14 +534,14 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 			temp_wu_file_name.clear();
 			
 			system_str = "cp tmp_wu_file `dir_hier_path " + cur_wu_input_file_name + "`";
-			//std::cout << "before system command : " << system_str << std::endl; 
+			//cout << "before system command : " << system_str << endl; 
 			system(system_str.c_str());
 			
-			//std::cout << "after system command" << std::endl;
+			//cout << "after system command" << endl;
 			system_str = "create_work -appname pdsat -wu_name " + wu_name +
 				" -wu_template templates/workunit_template_ls_diag10_2_10N2R9K.xml" +
 				" -result_template templates/result_template_ls_diag10_2_10N2R9K.xml " + cur_wu_input_file_name;
-			std::cout << "before system command : " << system_str << std::endl;
+			cout << "before system command : " << system_str << endl;
 			system(system_str.c_str());
 			
 			new_created_wus++;
@@ -556,13 +558,13 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 			range2 = (wu_index + 1)*config_p.problems_in_wu - 1;
 			if (range2 >= assumptions_count) {
 				range2 = assumptions_count - 1;
-				std::cout << "range2 changed to " << range2 << std::endl;
+				cout << "range2 changed to " << range2 << endl;
 				IsFastExit = true; // add last values to WU and exit
 				IsLastGenerating = true; // tell to high-level function about ending of generation
 			}
 
 			if (!IsAddingWUneeded) {
-				std::cout << "break cause of IsAddingWUneeded " << IsAddingWUneeded << std::endl;
+				cout << "break cause of IsAddingWUneeded " << IsAddingWUneeded << endl;
 				break; // don't create new WU
 			}
 
@@ -573,33 +575,33 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 			cur_wu_input_file_name = "input_" + wu_name;
 			sstream.str(""); sstream.clear();
 			
-			temp_wu_file_name.open("tmp_wu_file", std::ios_base::out);
+			temp_wu_file_name.open("tmp_wu_file", ios_base::out);
 			if (!temp_wu_file_name.is_open()) {
-				std::cerr << "Failed to create wu-input.txt" << std::endl;
+				cerr << "Failed to create wu-input.txt" << endl;
 				exit(1);
 			}
 			// write input data to WU file
 			temp_wu_file_name << header_sstream.str();
-			if (header_sstream.str().find("before_range") == std::string::npos)
-				temp_wu_file_name << "before_range" << std::endl; // add if missed in header
+			if (header_sstream.str().find("before_range") == string::npos)
+				temp_wu_file_name << "before_range" << endl; // add if missed in header
 			temp_wu_file_name << range1 << " " << range2;
 			temp_wu_file_name.close();
 			temp_wu_file_name.clear();
 
 			system_str = "cp tmp_wu_file `dir_hier_path " + cur_wu_input_file_name + "`";
-			//std::cout << "before system command : " << system_str << std::endl; 
+			//cout << "before system command : " << system_str << endl; 
 			system(system_str.c_str());
-			//std::cout << "after system command" << std::endl;
+			//cout << "after system command" << endl;
 			system_str = "create_work -appname pdsat_crypto -wu_name " + wu_name +
 				" -wu_template templates/workunit_template_bivium.xml" +
 				" -result_template templates/result_template_bivium.xml " + cur_wu_input_file_name;
-			std::cout << "before system command : " << system_str << std::endl;
+			cout << "before system command : " << system_str << endl;
 			system(system_str.c_str());
-			//std::cout << "after system command" << std::endl;
+			//cout << "after system command" << endl;
 
 			if (!now_created) {
-				std::cout << "isRangeMode " << isRangeMode << std::endl;
-				std::cout << "first cur_wu_input_file_name " << cur_wu_input_file_name << std::endl;
+				cout << "isRangeMode " << isRangeMode << endl;
+				cout << "first cur_wu_input_file_name " << cur_wu_input_file_name << endl;
 			}
 			now_created++;
 			
@@ -607,41 +609,41 @@ void create_wus(latin_square &ls, config_params_crypto &config_p,
 		}
 	}
 	
-	std::cout << "created_wus " << config_p.created_wus << std::endl;
+	cout << "created_wus " << config_p.created_wus << endl;
 
-	std::cout << "new_created_wus " << new_created_wus << std::endl;
+	cout << "new_created_wus " << new_created_wus << endl;
 	config_p.created_wus += new_created_wus;
 	// update ls value
 	if (isLS) {
 		config_p.skip_values = ls.skip_values = ls.values_checked;
-		std::cout << "new skip_values " << config_p.skip_values << std::endl;
+		cout << "new skip_values " << config_p.skip_values << endl;
 	}
 	
 	// update config file
-	std::ofstream master_config_file;
-	std::stringstream cur_config_sstream;
+	ofstream master_config_file;
+	stringstream cur_config_sstream;
 	master_config_file.open( master_config_file_name.c_str() );
-	cur_config_sstream << "problem_type " << config_p.problem_type << std::endl;
-	cur_config_sstream << "settings_file " << config_p.settings_file << std::endl;
-	cur_config_sstream << "data_file " << config_p.data_file << std::endl;
-	cur_config_sstream << "cnf_variables " << config_p.cnf_variables << std::endl;
-	cur_config_sstream << "cnf_clauses " << config_p.cnf_clauses << std::endl;
-	cur_config_sstream << "N " << config_p.N << std::endl;
-	cur_config_sstream << "rows_count " << config_p.rows_count << std::endl;
-	cur_config_sstream << "K " << config_p.K << std::endl;
-	cur_config_sstream << "diag_elements " << config_p.diag_elements << std::endl;
-	cur_config_sstream << "skip_values " << config_p.skip_values << std::endl;
-	cur_config_sstream << "problems_in_wu " << config_p.problems_in_wu << std::endl;
-	cur_config_sstream << "unsent_needed_wus " << config_p.unsent_needed_wus << std::endl;
-	cur_config_sstream << "total_wus " << config_p.total_wus << std::endl;
-	cur_config_sstream << "seconds_between_launches " << config_p.seconds_between_launches << std::endl;
-	cur_config_sstream << "credits_per_wu " << config_p.credits_per_wu << std::endl;
-	cur_config_sstream << "created_wus " << config_p.created_wus << std::endl;
+	cur_config_sstream << "problem_type " << config_p.problem_type << endl;
+	cur_config_sstream << "settings_file " << config_p.settings_file << endl;
+	cur_config_sstream << "data_file " << config_p.data_file << endl;
+	cur_config_sstream << "cnf_variables " << config_p.cnf_variables << endl;
+	cur_config_sstream << "cnf_clauses " << config_p.cnf_clauses << endl;
+	cur_config_sstream << "N " << config_p.N << endl;
+	cur_config_sstream << "rows_count " << config_p.rows_count << endl;
+	cur_config_sstream << "K " << config_p.K << endl;
+	cur_config_sstream << "diag_elements " << config_p.diag_elements << endl;
+	cur_config_sstream << "skip_values " << config_p.skip_values << endl;
+	cur_config_sstream << "problems_in_wu " << config_p.problems_in_wu << endl;
+	cur_config_sstream << "unsent_needed_wus " << config_p.unsent_needed_wus << endl;
+	cur_config_sstream << "total_wus " << config_p.total_wus << endl;
+	cur_config_sstream << "seconds_between_launches " << config_p.seconds_between_launches << endl;
+	cur_config_sstream << "credits_per_wu " << config_p.credits_per_wu << endl;
+	cur_config_sstream << "created_wus " << config_p.created_wus << endl;
 	master_config_file << cur_config_sstream.str();
 	cur_config_sstream.str(""); cur_config_sstream.clear();
 	master_config_file.close();
-	std::cout << "config file updated" << std::endl;
-	std::cout << "---***---" << std::endl;
+	cout << "config file updated" << endl;
+	cout << "---***---" << endl;
 }
 
 #ifndef _WIN32
@@ -653,13 +655,13 @@ void GetCountOfUnsentWUs( long long &unsent_count )
     char *pass;
 	MYSQL *conn;
 	
-	std::ifstream pass_file;
+	ifstream pass_file;
 	pass_file.open( pass_file_name.c_str() );
 	if ( !pass_file.is_open() ) {
-		std::cerr << "psswd_file not open" << std::endl;
+		cerr << "psswd_file wasn't opened" << endl;
 		exit(1);
 	}
-	std::string str;
+	string str;
 	getline( pass_file, str );
 	db = new char[str.length() + 1];
 	strcpy( db, str.c_str() );
@@ -669,25 +671,25 @@ void GetCountOfUnsentWUs( long long &unsent_count )
 	getline( pass_file, str );
 	pass = new char[str.length() + 1];
 	strcpy( pass, str.c_str() );
-	std::cout << "db "   << db   << std::endl;
-	std::cout << "user " << user << std::endl;
+	cout << "db "   << db   << endl;
+	cout << "user " << user << endl;
 	//cout << "pass " << pass << endl;
 	
 	conn = mysql_init(NULL);
 	if(conn == NULL)
-		std::cerr << "Error: can't create MySQL-descriptor\n" << std::endl;
+		cerr << "Error: can't create MySQL-descriptor\n" << endl;
 
 	if(!mysql_real_connect(conn, host, user, pass, db, 0, NULL, 0)) {
-		std::cerr << "Error: can't connect to MySQL server" << std::endl;
+		cerr << "Error: can't connect to MySQL server" << endl;
 		exit(1);
 	}
 	delete[] db;
 	delete[] user;
 	delete[] pass;
 
-	std::vector< std::vector<std::stringstream *> > result_vec;
+	vector< vector<stringstream *> > result_vec;
 	str = "SELECT COUNT(*) FROM workunit WHERE id IN(SELECT workunitid FROM result WHERE server_state = 2)";
-	std::cout << str << std::endl;
+	cout << str << endl;
 
 	if ( ProcessQuery( conn, str, result_vec ) ) {
 		*result_vec[0][0] >> unsent_count;
@@ -698,30 +700,30 @@ void GetCountOfUnsentWUs( long long &unsent_count )
 		unsent_count = -1;
 }
 
-bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::stringstream *> > &result_vec )
+bool ProcessQuery( MYSQL *conn, string str, vector< vector<stringstream *> > &result_vec )
 {
 	MYSQL_RES *res;
 	MYSQL_ROW row;
 	int num_fields;
 	
 	if ( mysql_query(conn, str.c_str()) != 0 ) {
-		std::cerr << "Error: can't execute SQL-query\n";
+		cerr << "Error: can't execute SQL-query\n";
 		return false;
 	}
 	
 	res = mysql_store_result( conn );
 
 	if( res == NULL ) 
-		std::cerr << "Error: can't get the result description\n";
+		cerr << "Error: can't get the result description\n";
 
 	num_fields = mysql_num_fields(res);
-	std::stringstream *sstream_p;
-	std::vector<std::stringstream *> result_data;
+	stringstream *sstream_p;
+	vector<stringstream *> result_data;
 
 	if ( mysql_num_rows( res ) > 0 ) {
 		while((row = mysql_fetch_row(res)) != NULL) {
 			for( int i = 0; i < num_fields; ++i ) {
-				sstream_p = new std::stringstream();
+				sstream_p = new stringstream();
 				*sstream_p << row[i]; // get value
 				result_data.push_back( sstream_p );
 			}
@@ -735,42 +737,3 @@ bool ProcessQuery( MYSQL *conn, std::string str, std::vector< std::vector<std::s
 	return true;
 }
 #endif
-
-/*
-void add_result_to_file( std::string output_filename, char *tag, char *id )
-{
-std::ofstream output_file;
-std::string final_output_name;
-std::stringstream final_sstream;
-std::stringstream sstream;
-
-sstream << "final_output.txt";
-final_output_name = sstream.str( );
-sstream.str( "" );
-sstream.clear();
-output_file.open( final_output_name.c_str(), std::ios_base :: out | std::ios_base :: app );
-if ( !output_file.is_open() ) {
-std::cerr << "Cannot open final_output.txt for writing" << std::cerr;
-exit(1);
-}
-
-std::string input_str;
-std::ifstream result_file;
-result_file.open( output_filename.c_str(), std::ios_base :: in );
-if ( !result_file.is_open( ) ) {
-std::cerr <<  "Cannot open result_file" << std::endl;
-output_file.close();
-exit(1);
-}
-
-final_sstream << "result_" << tag << " " << "id " << id << " ";
-while ( getline( result_file, input_str ) )
-final_sstream << input_str;
-final_sstream << std::endl;
-
-output_file << final_sstream.rdbuf();
-
-output_file.close();
-result_file.close();
-}
-*/
