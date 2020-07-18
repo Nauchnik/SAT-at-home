@@ -6,6 +6,22 @@
 #include <sstream>
 #include "minisat22_wrapper.h"
 
+int ls10_2_diag_known_cms_many_array[] = {
+#include "ls10_2_diag_known_cms_many_known_1st_row_min1m.inc"
+};
+
+int ls10_2_diag_known_cms_few_1_array[] = {
+#include "ls10_2_diag_known_cms_few_1_known_1st_row_min1m.inc"
+};
+
+int ls10_2_diag_known_cms_few_2_array[] = {
+#include "ls10_2_diag_known_cms_few_2_known_1st_row_min1m.inc"
+};
+
+int ls10_2_diag_known_cms_unknown_array[] = {
+#include "ls10_2_diag_known_cms_unknown_known_1st_row_min1m.inc"
+};
+
 using namespace std;
 
 #define CHECKPOINT_FILE "chpt"
@@ -93,10 +109,12 @@ int main( int argc, char **argv ) {
 
 bool do_work( string &input_path, stringstream &result_sstream )
 {
+    char buf[256];
     string cnf_name, str;
     ifstream ifile( input_path.c_str() );
     getline( ifile, cnf_name );
-    //fprintf( stderr, "cnf %s\n", cnf_name.c_str() );
+    fprintf(stderr, "%s APP: cnf %s\n",
+        boinc_msg_prefix(buf, sizeof(buf)), cnf_name);
     clock_t begin_clock = clock();
 
     vector<vector<int>> cubes;
@@ -116,11 +134,35 @@ bool do_work( string &input_path, stringstream &result_sstream )
 
     cubes_num = cubes.size();
 
+    vector<int> cnf_vec;
+    if (cnf_name == "ls10_2_diag_known_cms_many_known_1st_row_min1m.cnf") {
+        cnf_vec.resize(sizeof(ls10_2_diag_known_cms_many_array) / sizeof(ls10_2_diag_known_cms_many_array[0]));
+        for (unsigned i = 0; i < cnf_vec.size(); i++)
+            cnf_vec[i] = ls10_2_diag_known_cms_many_array[i];
+    }
+    else if (cnf_name == "ls10_2_diag_known_cms_few_1_known_1st_row_min1m.cnf") {
+        cnf_vec.resize(sizeof(ls10_2_diag_known_cms_few_1_array) / sizeof(ls10_2_diag_known_cms_few_1_array[0]));
+        for (unsigned i = 0; i < cnf_vec.size(); i++)
+            cnf_vec[i] = ls10_2_diag_known_cms_few_1_array[i];
+    }
+    else if (cnf_name == "ls10_2_diag_known_cms_few_2_known_1st_row_min1m.cnf") {
+        cnf_vec.resize(sizeof(ls10_2_diag_known_cms_few_2_array) / sizeof(ls10_2_diag_known_cms_few_2_array[0]));
+        for (unsigned i = 0; i < cnf_vec.size(); i++)
+            cnf_vec[i] = ls10_2_diag_known_cms_few_2_array[i];
+    }
+    else if (cnf_name == "ls10_2_diag_known_cms_unknown_known_1st_row_min1m.cnf") {
+        cnf_vec.resize(sizeof(ls10_2_diag_known_cms_unknown_array) / sizeof(ls10_2_diag_known_cms_unknown_array[0]));
+        for (unsigned i = 0; i < cnf_vec.size(); i++)
+            cnf_vec[i] = ls10_2_diag_known_cms_unknown_array[i];
+    }
+    
+    //ifstream cnf_stream(cnf_name);
+    //m22_wrapper.parse_DIMACS_to_problem(cnf_stream, cnf_problem);
+    //cnf_stream.close();
+
     minisat22_wrapper m22_wrapper;
     Problem cnf_problem;
-    ifstream cnf_stream(cnf_name);
-    m22_wrapper.parse_DIMACS_to_problem(cnf_stream, cnf_problem);
-    cnf_stream.close();
+    m22_wrapper.parse_DIMACS_from_inc( cnf_vec, cnf_problem );
     
     for (unsigned i=cubes_processed; i<cubes.size(); i++) {
 	    Solver *S = new Solver();
