@@ -1,7 +1,0 @@
-// доступ к инету
-service apache2 stop
-service apache2 start
-// перезапуск БД
-sudo /etc/init.d/mysql restart
-// починить сломанную таблицу в БД
-myisamchk -r -f -o table_file (в файловой системе)
