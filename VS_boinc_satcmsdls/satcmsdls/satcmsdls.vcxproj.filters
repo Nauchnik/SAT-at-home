@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\src_boinc_app_satcmsdls\satcmsdls.cpp" />
+    <ClCompile Include="..\..\..\pdsat\src_common\minisat\core\Solver.cc">
+      <Filter>minisat</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\pdsat\src_common\minisat\utils\Options.cc">
+      <Filter>minisat</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\pdsat\src_common\minisat\utils\System.cc">
+      <Filter>minisat</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\pdsat\src_common\minisat22_wrapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="minisat">
+      <UniqueIdentifier>{cae8b932-090f-42ee-9d7d-c65d9002a5d1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\core\Dimacs.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\core\Solver.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\core\SolverTypes.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Alg.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Alloc.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Heap.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\IntTypes.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Map.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Queue.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Sort.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\Vec.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\mtl\XAlloc.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\utils\Options.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\utils\ParseUtils.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat\utils\System.h">
+      <Filter>minisat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\pdsat\src_common\minisat22_wrapper.h" />
+  </ItemGroup>
+</Project>
