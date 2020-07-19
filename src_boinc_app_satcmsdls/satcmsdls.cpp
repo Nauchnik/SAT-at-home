@@ -114,7 +114,7 @@ bool do_work( string &input_path, stringstream &result_sstream )
     ifstream ifile( input_path.c_str() );
     getline( ifile, cnf_name );
     fprintf(stderr, "%s APP: cnf %s\n",
-        boinc_msg_prefix(buf, sizeof(buf)), cnf_name);
+        boinc_msg_prefix(buf, sizeof(buf)), cnf_name.c_str());
     clock_t begin_clock = clock();
 
     vector<vector<int>> cubes;
