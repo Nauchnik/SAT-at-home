@@ -42,7 +42,7 @@ if end_wu_index < 0 or end_wu_index > len(wus)-1:
 
 print('generating %d wus' % (end_wu_index-start_wu_index+1))
 for i in range(start_wu_index, end_wu_index+1):
-	with open('in_wuid' + str(i), 'w') as wufile:
+	with open('in_' + str(i).zfill(6), 'w') as wufile:
 		wufile.write(PROBLEM + '\n')
 		for cube in wus[i]:
 			wufile.write(cube + '\n')
