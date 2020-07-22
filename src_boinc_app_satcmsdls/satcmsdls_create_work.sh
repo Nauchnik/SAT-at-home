@@ -3,7 +3,7 @@
 # Workunit creation for the specified rank and number of a square
 
 IN_DIR="/home/boincadm/sandbox/satcmsdls_wus"
-PROBLEM="satcmsdls_many_wu"
+PROBLEM="satcmsdls_few_1_wu"
 
 for IN_FILE in `ls $IN_DIR`
 do

@@ -1,7 +1,7 @@
 import sys
 
 CUBES_PER_WU = 20
-PROBLEM = 'ls10_2_diag_known_cms_many_known_1st_row_min1m.cnf'
+PROBLEM = 'ls10_2_diag_known_cms_few_1_known_1st_row_min1m.cnf'
 
 if len(sys.argv) < 4:
 	print('Usage : script cubes_file start_wu_index end_wu_index')
@@ -42,7 +42,7 @@ if end_wu_index < 0 or end_wu_index > len(wus)-1:
 
 print('generating %d wus' % (end_wu_index-start_wu_index+1))
 for i in range(start_wu_index, end_wu_index+1):
-	with open('in_' + str(i).zfill(6), 'w') as wufile:
+	with open(PROBLEM.split('.')[0].replace('_','-') + '-in_' + str(i).zfill(6), 'w') as wufile:
 		wufile.write(PROBLEM + '\n')
 		for cube in wus[i]:
 			wufile.write(cube + '\n')
