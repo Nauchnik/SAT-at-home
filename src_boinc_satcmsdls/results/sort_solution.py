@@ -1,4 +1,5 @@
 # Oleg Zaikin, PhD
+# sort solution by variable increse
 
 #s SATISFIABLE
 #v -2027

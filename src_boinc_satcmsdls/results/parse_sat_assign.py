@@ -10,6 +10,9 @@ fname_list = glob.glob('*' + fname_mask + '*')
 fname_list = sorted(fname_list)
 print(fname_list)
 
+for fname in fname_list:
+	print(fname.split('_out')[0]) 
+
 sat_assign = []
 ext_fname = ''
 cnf_fname = ''
