@@ -1,3 +1,5 @@
+# Oleg Zaikin, PhD
+
 import sys
 import glob
 import os

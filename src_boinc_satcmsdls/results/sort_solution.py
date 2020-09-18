@@ -1,3 +1,5 @@
+# Oleg Zaikin, PhD
+
 #s SATISFIABLE
 #v -2027
 #v 6456

@@ -1,3 +1,4 @@
+# Oleg Zaikin, PhD
 # convert from sat assing obtained by extend-solution.sh (cadical script) to a pair of LS
 
 import sys
